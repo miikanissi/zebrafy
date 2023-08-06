@@ -1,0 +1,37 @@
+[build-system]
+requires = [ "setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zebrafy"
+version = "0.1.0"
+description = "Python library for converting Zebra Programming Language (ZPL) to and from PDF, HTML, and images"
+classifiers = [ 
+    "Development Status :: 4 - Beta", 
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)", 
+    "Operating System :: OS Independent", 
+    "Natural Language :: English", 
+    "Programming Language :: Python",
+    ]
+dependencies = [ "setuptools", "pillow"]
+
+[[project.authors]]
+name = "Miika Nissi"
+email = "miika@miikanissi.com"
+
+[project.license]
+text = "LGPLv3"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/miikanissi/zebrafy"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = [ "zebrafy"]
+namespaces = false
