@@ -29,6 +29,7 @@ from io import BytesIO
 from PIL import Image
 
 # 3. Local imports in the relative form:
+from .graphic_field import GraphicField
 
 
 GFA_MATCHER = re.compile(
@@ -36,16 +37,20 @@ GFA_MATCHER = re.compile(
 )
 
 
-class Zebrafy(object):
+class Zebrafy:
     """
-    Provides methods for converting Zebra Programming Language (ZPL) to and from PDF,
-    HTML, and images.
+    Provides methods for converting Zebra Programming Language (ZPL) to and from PDF, \
+    and images.
 
-    :param data: The output data of file conversion
+    :param int zid: A Zebrafy object identifier
+    :param zpl: The output data of file conversion
     """
 
-    def __init__(self, data):
+    def __init__(self, data, zid=None):
         self.data = data
+        if zid is None:
+            zid = 1
+        self.zid = zid
 
     @staticmethod
     def _match_dimensions(match):
@@ -59,23 +64,9 @@ class Zebrafy(object):
         image = Image.open(BytesIO(image))
         image_bw = image.convert("1")
 
-        # Get image size and calculate new width
-        width, height = image.size
-        width = int((width + 7) / 8)
-        total = int(width * height)
+        graphic_field = GraphicField(image_bw, compression_type="A")
 
-        # Convert image to hex
-        image_hex = image_bw.tobytes().hex()
-        zpl_body = image_hex
-
-        zpl_header = "^GFA,{byte_count},{graphic_count},{width},".format(
-            byte_count=len(zpl_body), graphic_count=total, width=width
-        )
-        zpl_footer = "^FS"
-
-        zpl_result = (
-            "^XA\n" + zpl_header + "\n" + zpl_body + "\n" + zpl_footer + "\n^XZ\n"
-        )
+        zpl_result = "^XA\n" + graphic_field.graphic_field + "\n^XZ\n"
 
         return zpl_result
 
