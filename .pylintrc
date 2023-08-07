@@ -1,0 +1,19 @@
+[MESSAGES CONTROL]
+disable=all
+
+enable=anomalous-backslash-in-string,
+    assignment-from-none,
+    duplicate-key,
+    pointless-statement,
+    pointless-string-statement,
+    redundant-keyword-arg,
+    reimported,
+    return-in-init,
+    too-few-format-args,
+    unreachable,
+    too-complex,
+
+[REPORTS]
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+output-format=colorized
+reports=no

@@ -31,7 +31,6 @@ from PIL import Image
 # 3. Local imports in the relative form:
 from .graphic_field import GraphicField
 
-
 GFA_MATCHER = re.compile(
     r"\^GFA,([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),([^\^]+)\^FS"
 )

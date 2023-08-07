@@ -6,16 +6,32 @@ build-backend = "setuptools.build_meta"
 name = "zebrafy"
 version = "0.1.0"
 description = "Python library for converting Zebra Programming Language (ZPL) to and from PDF, HTML, and images"
-classifiers = [ 
-    "Development Status :: 4 - Beta", 
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)", 
-    "Operating System :: OS Independent", 
-    "Natural Language :: English", 
-    "Programming Language :: Python",
-    ]
-dependencies = [ "setuptools", "pillow"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Manufacturing",
+    "Topic :: Printing",
+]
+dependencies = ["pillow"]
+requires-python = ">3.2.5"
 
 [[project.authors]]
+name = "Miika Nissi"
+email = "miika@miikanissi.com"
+
+[[project.maintainers]]
 name = "Miika Nissi"
 email = "miika@miikanissi.com"
 
