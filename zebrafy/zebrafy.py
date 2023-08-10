@@ -22,8 +22,10 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import base64
 import re
 from io import BytesIO
+from itertools import chain
 
 # 2. Known third party imports:
 from PIL import Image
@@ -31,9 +33,12 @@ from PIL import Image
 # 3. Local imports in the relative form:
 from .graphic_field import GraphicField
 
-GFA_MATCHER = re.compile(
-    r"\^GFA,([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),([^\^]+)\^FS"
+GF_MATCHER = re.compile(
+    r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS"
 )
+A_COMPRESSION_PARAMS = ["A", "ASCII"]
+B_COMPRESSION_PARAMS = ["B", "BINARY", "B64", "BASE64"]
+C_COMPRESSION_PARAMS = ["C", "COMPRESSED-BINARY", "Z64", "LZ77"]
 
 
 class Zebrafy:
@@ -53,17 +58,42 @@ class Zebrafy:
 
     @staticmethod
     def _match_dimensions(match):
-        total = int(match.group(2))
-        width = int(match.group(3))
+        total = int(match.group(3))
+        width = int(match.group(4))
+
         return int(width * 8), int(total / width)
 
     @staticmethod
-    def image_to_zpl(image):
-        # Open and convert image to grayscale
-        image = Image.open(BytesIO(image))
-        image_bw = image.convert("1")
+    def _validate_params(image, compression_type):
+        if not isinstance(image, bytes):
+            raise ValueError("Image must be a valid bytes object.")
 
-        graphic_field = GraphicField(image_bw, compression_type="A")
+        if not isinstance(compression_type, str):
+            raise ValueError("Compression type must be a string.")
+
+        if compression_type.upper() not in chain(
+            A_COMPRESSION_PARAMS, B_COMPRESSION_PARAMS, C_COMPRESSION_PARAMS
+        ):
+            raise ValueError(
+                (
+                    "Invalid parameter for compression type. Valid options include:"
+                    " {valids}."
+                ).format(
+                    valids=chain(
+                        A_COMPRESSION_PARAMS, B_COMPRESSION_PARAMS, C_COMPRESSION_PARAMS
+                    )
+                )
+            )
+
+    @staticmethod
+    def image_to_zpl(image, compression_type="A"):
+        # Validate all input parameters
+        Zebrafy._validate_params(image, compression_type)
+
+        # Open and convert image to grayscale
+        image = Image.open(BytesIO(image)).convert("1")
+
+        graphic_field = GraphicField(image, compression_type=compression_type.upper())
 
         zpl_result = "^XA\n" + graphic_field.graphic_field + "\n^XZ\n"
 
@@ -71,13 +101,19 @@ class Zebrafy:
 
     @staticmethod
     def zpl_to_image(zpl):
-        match = GFA_MATCHER.search(zpl)
+        match = GF_MATCHER.search(zpl)
         if not match:
             raise ValueError("Could not find an image in ZPL content.")
 
         width, height = Zebrafy._match_dimensions(match)
+        compression_type = match.group(1)
+        image_string = match.group(5)
 
-        image_bytes = bytes.fromhex(match.group(4))
+        if compression_type.upper() in A_COMPRESSION_PARAMS:
+            image_bytes = bytes.fromhex(image_string)
+        elif compression_type.upper() in B_COMPRESSION_PARAMS:
+            image_bytes = base64.b64decode(image_string)
+
         image = Image.frombytes("1", (width, height), image_bytes)
 
         return image

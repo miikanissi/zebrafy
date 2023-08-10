@@ -22,6 +22,7 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import base64
 
 # 2. Known third party imports:
 
@@ -113,6 +114,9 @@ class GraphicField:
         image_bytes = self._image.tobytes()
         if self.compression_type == "A":
             return image_bytes.hex()
+        if self.compression_type == "B":
+            return bytes.decode(base64.b64encode(image_bytes), "utf-8")
+
         return image_bytes
 
     @property
