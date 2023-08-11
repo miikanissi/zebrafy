@@ -23,22 +23,23 @@
 
 # 1. Standard library imports:
 import base64
+import zlib
 
 # 2. Known third party imports:
-
 # 3. Local imports in the relative form:
+from .crc import CRC
 
 
 class GraphicField:
     """
-    Converts an image to Zebra Programming Language (ZPL) graphic field data.
+    Converts a PIL image to Zebra Programming Language (ZPL) graphic field data.
 
     :param Image image: An instance of a PIL Image.
     :param str compression_type: ZPL compression type parameter that accepts the \
     following values:
-        - "A": ASCII hexadecimal
-        - "B": Binary
-        - "C": Compressed binary
+        - "A": ASCII hexadecimal - most compatible
+        - "B": Base64 binary
+        - "C": LZ77 / Zlib compressed base64 binary - best compression
     (Default: ``"A"``)
     """
 
@@ -60,7 +61,7 @@ class GraphicField:
 
         :returns int: Binary byte count."
         """
-        return len(self.data)
+        return len(self.data_string)
 
     @property
     def bytes_per_row(self):
@@ -86,50 +87,44 @@ class GraphicField:
         return int(self.bytes_per_row * self._image.size[1])
 
     @property
-    def compression_type(self):
+    def data_string(self):
         """
-        Get compression type.
+        Get graphic field data string depending on compression type.
 
-        Following options:
-            - "A": ASCII hexadecimal
-            - "B": Binary
-            - "C": Compressed binary
-
-        :returns str: Compression type.
-        """
-        return self._compression_type
-
-    @property
-    def data(self):
-        """
-        Get graphic field data depending on compression type.
-
-        Options:
-            - ASCII hexadecimal data: 00 to FF
-            - Binary data: Strictly binary data is sent from the host. All control prefixes are
-        ignored until the total number of bytes needed for the graphic format is sent.
-
-        :returns: Graphic field data depending on compression type.
+        :returns str: Graphic field data string depending on compression type.
         """
         image_bytes = self._image.tobytes()
-        if self.compression_type == "A":
-            return image_bytes.hex()
-        if self.compression_type == "B":
-            return bytes.decode(base64.b64encode(image_bytes), "utf-8")
+        data_string = ""
 
-        return image_bytes
+        if self._compression_type == "A":
+            data_string = image_bytes.hex()
 
-    @property
-    def graphic_field(self):
+        elif self._compression_type == "B":
+            b64_bytes = base64.b64encode(image_bytes)
+            data_string = ":B64:{encoded_data}:{crc}".format(
+                encoded_data=b64_bytes.decode("ascii"),
+                crc=CRC(b64_bytes).get_crc_hex_string(),
+            )
+
+        elif self._compression_type == "C":
+            z64_bytes = base64.b64encode(zlib.compress(image_bytes))
+            data_string = ":Z64:{encoded_data}:{crc}".format(
+                encoded_data=z64_bytes.decode("ascii"),
+                crc=CRC(z64_bytes).get_crc_hex_string(),
+            )
+
+        return data_string
+
+    def get_graphic_field(self):
         """
-        Get a complete graphic field string in ZPL.
+        Get a complete graphic field string for ZPL.
 
-        :returns str: Complete graphic field string in ZPL.
+        :returns str: Complete graphic field string for ZPL.
         """
         return "^GF{comp_type},{bb_count},{gf_count},{bpr},{data}^FS".format(
-            comp_type=self.compression_type,
+            comp_type=self._compression_type,
             bb_count=self.binary_byte_count,
             gf_count=self.graphic_field_count,
             bpr=self.bytes_per_row,
-            data=self.data,
+            data=self.data_string,
         )
