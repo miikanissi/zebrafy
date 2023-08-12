@@ -45,7 +45,7 @@ class CRC:
             poly = 0x8408
         self.poly = poly
 
-    def _get_crc16(self):
+    def _get_crc16_ccitt(self):
         """
         Calculate CRC-16-CCITT Algorithm.
 

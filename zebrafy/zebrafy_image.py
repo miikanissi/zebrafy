@@ -44,8 +44,10 @@ class ZebrafyImage:
     (Default: ``"A"``)
     """
 
-    def __init__(self, image_bytes, compression_type="A"):
+    def __init__(self, image_bytes, compression_type=None):
         self.image_bytes = image_bytes
+        if compression_type is None:
+            compression_type = "a"
         self.compression_type = compression_type.upper()
 
     def to_zpl(self):
