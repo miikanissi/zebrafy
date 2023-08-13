@@ -28,7 +28,7 @@ import unittest
 
 # 2. Known third party imports:
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyImage, ZebrafyZPL, __version__
+from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL, __version__
 
 
 class TestZebrafy(unittest.TestCase):
@@ -46,82 +46,88 @@ class TestZebrafy(unittest.TestCase):
         ) as file:
             return file.read()
 
-    def _image_to_zpl(self, filename, compression_type=None):
-        """
-        Helper method to convert image to ZPL.
-
-        :param str file_name: File name of a file in tests/static directory.
-        :param str compression_type: The compression type used ("A", "B", "C")
-        :returns str: ZPL contents as string
-        """
-        zebrafy_image = ZebrafyImage(
-            self._read_static_file(filename), compression_type=compression_type
-        )
-        zpl = zebrafy_image.to_zpl()
-        return zpl
-
-    def _zpl_to_image(self, filename):
-        """
-        Helper method to convert ZPL to PIL Image.
-
-        :param str file_name: File name of a file in tests/static directory.
-        :returns Image: PIL Image from ZPL.
-        """
-        zebrafy_zpl = ZebrafyZPL(
-            self._read_static_file(filename),
-        )
-        image = zebrafy_zpl.to_image()
-        return image
-
     def test_version(self):
         """Test package version."""
         self.assertEqual(__version__, "0.1.0")
 
+    ####################
+    # Image to ZPL Tests
+    ####################
     def test_image_to_default_zpl(self):
         """Test image to ZPL with default options."""
-        default_zpl = self._image_to_zpl("image.png")
+        default_zpl = ZebrafyImage(self._read_static_file("test_image.png")).to_zpl()
         self.assertEqual(default_zpl, self._read_static_file("image_zpl_default.zpl"))
 
     def test_image_to_gfa_zpl(self):
         """Test image to ZPL with A (ASCII) compression."""
-        gfa_zpl = self._image_to_zpl("image.png", compression_type="A")
+        gfa_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), compression_type="A"
+        ).to_zpl()
         self.assertEqual(gfa_zpl, self._read_static_file("image_zpl_gfa.zpl"))
 
     def test_image_to_gfb_zpl(self):
         """Test image to ZPL with B (B64 Binary) compression."""
-        gfb_zpl = self._image_to_zpl("image.png", compression_type="B")
+        gfb_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), compression_type="B"
+        ).to_zpl()
         self.assertEqual(gfb_zpl, self._read_static_file("image_zpl_gfb.zpl"))
 
     def test_image_to_gfc_zpl(self):
         """Test image to ZPL with C (Z64 Binary) compression."""
-        gfc_zpl = self._image_to_zpl("image.png", compression_type="C")
+        gfc_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), compression_type="C"
+        ).to_zpl()
         self.assertEqual(gfc_zpl, self._read_static_file("image_zpl_gfc.zpl"))
 
+    def test_image_to_zpl_no_dither(self):
+        """Test image to ZPL without dithering the image."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), dither=False
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("image_gf_no_dither.zpl"))
+
+    def test_image_to_zpl_threshold_low(self):
+        """Test image to ZPL without dithering the image and low threshold."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), dither=False, threshold=40
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("image_gf_low_threshold.zpl"))
+
+    def test_image_to_zpl_threshold_high(self):
+        """Test image to ZPL without dithering the image and high threshold."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), dither=False, threshold=215
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("image_gf_high_threshold.zpl"))
+
+    ####################
+    # ZPL to Image Tests
+    ####################
     def test_gfa_zpl_to_image(self):
         """Test ZPL GFA to image bytes."""
-        image = self._zpl_to_image("image_zpl_gfa.zpl")
+        image = ZebrafyZPL(self._read_static_file("image_zpl_gfa.zpl")).to_image()
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("zpl_gfa_image.png")
+            image_bytes.getvalue(), self._read_static_file("image_zpl_gfa.png")
         )
 
     def test_gfb_zpl_to_image(self):
         """Test ZPL GFB to image bytes."""
-        image = self._zpl_to_image("image_zpl_gfb.zpl")
+        image = ZebrafyZPL(self._read_static_file("image_zpl_gfb.zpl")).to_image()
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("zpl_gfb_image.png")
+            image_bytes.getvalue(), self._read_static_file("image_zpl_gfb.png")
         )
 
     def test_gfc_zpl_to_image(self):
         """Test ZPL GFC to image bytes."""
-        image = self._zpl_to_image("image_zpl_gfc.zpl")
+        image = ZebrafyZPL(self._read_static_file("image_zpl_gfc.zpl")).to_image()
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("zpl_gfc_image.png")
+            image_bytes.getvalue(), self._read_static_file("image_zpl_gfc.png")
         )
 
     def test_broken_zpl_gf_to_image(self):
@@ -131,3 +137,74 @@ class TestZebrafy(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             zebrafy_broken_zpl.to_image()
+
+    ##################
+    # PDF to ZPL Tests
+    ##################
+    def test_pdf_to_default_zpl(self):
+        """Test PDF to ZPL with default options."""
+        default_zpl = ZebrafyPDF(self._read_static_file("test_pdf.pdf")).to_zpl()
+        self.assertEqual(default_zpl, self._read_static_file("pdf_zpl_default.zpl"))
+
+    def test_pdf_to_gfa_zpl(self):
+        """Test PDF to ZPL with A (ASCII) compression."""
+        gfa_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), compression_type="A"
+        ).to_zpl()
+        self.assertEqual(gfa_zpl, self._read_static_file("pdf_zpl_gfa.zpl"))
+
+    def test_pdf_to_gfb_zpl(self):
+        """Test PDF to ZPL with B (B64 Binary) compression."""
+        gfb_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), compression_type="B"
+        ).to_zpl()
+        self.assertEqual(gfb_zpl, self._read_static_file("pdf_zpl_gfb.zpl"))
+
+    def test_pdf_to_gfc_zpl(self):
+        """Test PDF to ZPL with C (Z64 Binary) compression."""
+        gfc_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), compression_type="C"
+        ).to_zpl()
+        self.assertEqual(gfc_zpl, self._read_static_file("pdf_zpl_gfc.zpl"))
+
+    def test_pdf_to_zpl_no_dither(self):
+        """Test PDF to ZPL without dithering the PDF."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), dither=False
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("pdf_gf_no_dither.zpl"))
+
+    def test_pdf_to_zpl_threshold_low(self):
+        """Test PDF to ZPL without dithering the PDF and low threshold."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), dither=False, threshold=40
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("pdf_gf_low_threshold.zpl"))
+
+    def test_pdf_to_zpl_threshold_high(self):
+        """Test PDF to ZPL without dithering the PDF and high threshold."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), dither=False, threshold=215
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("pdf_gf_high_threshold.zpl"))
+
+    ##################
+    # ZPL to PDF Tests
+    ##################
+    def test_gfa_zpl_to_pdf(self):
+        """Test ZPL GFA to PDF bytes."""
+        pdf_bytes = ZebrafyZPL(self._read_static_file("pdf_zpl_gfa.zpl")).to_pdf()
+        gfa_zpl = ZebrafyPDF(pdf_bytes, compression_type="A").to_zpl()
+        self.assertEqual(gfa_zpl, self._read_static_file("pdf_zpl_gfa.zpl"))
+
+    def test_gfb_zpl_to_pdf(self):
+        """Test ZPL GFB to PDF bytes."""
+        pdf_bytes = ZebrafyZPL(self._read_static_file("pdf_zpl_gfb.zpl")).to_pdf()
+        gfb_zpl = ZebrafyPDF(pdf_bytes, compression_type="B").to_zpl()
+        self.assertEqual(gfb_zpl, self._read_static_file("pdf_zpl_gfb.zpl"))
+
+    def test_gfc_zpl_to_pdf(self):
+        """Test ZPL GFC to PDF bytes."""
+        pdf_bytes = ZebrafyZPL(self._read_static_file("pdf_zpl_gfc.zpl")).to_pdf()
+        gfc_zpl = ZebrafyPDF(pdf_bytes, compression_type="C").to_zpl()
+        self.assertEqual(gfc_zpl, self._read_static_file("pdf_zpl_gfc.zpl"))

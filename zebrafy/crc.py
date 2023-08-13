@@ -40,10 +40,10 @@ class CRC:
     """
 
     def __init__(self, data_bytes, poly=None):
-        self.data_bytes = data_bytes
+        self._data_bytes = data_bytes
         if poly is None:
             poly = 0x8408
-        self.poly = poly
+        self._poly = poly
 
     def _get_crc16_ccitt(self):
         """
@@ -51,13 +51,13 @@ class CRC:
 
         :returns int: CRC-16-CCITT
         """
-        data = bytearray(self.data_bytes)
+        data = bytearray(self._data_bytes)
         crc = 0xFFFF
         for b in data:
             cur_byte = 0xFF & b
             for _ in range(0, 8):
                 if (crc & 0x0001) ^ (cur_byte & 0x0001):
-                    crc = (crc >> 1) ^ self.poly
+                    crc = (crc >> 1) ^ self._poly
                 else:
                     crc >>= 1
                 cur_byte >>= 1

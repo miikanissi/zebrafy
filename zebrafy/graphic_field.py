@@ -43,8 +43,8 @@ class GraphicField:
     (Default: ``"A"``)
     """
 
-    def __init__(self, image, compression_type=None):
-        self._image = image
+    def __init__(self, pil_image, compression_type=None):
+        self._pil_image = pil_image
         if compression_type is None:
             compression_type = "a"
         self._compression_type = compression_type.upper()
@@ -73,7 +73,7 @@ class GraphicField:
 
         :returns int: Bytes per row."
         """
-        return int((self._image.size[0] + 7) / 8)
+        return int((self._pil_image.size[0] + 7) / 8)
 
     @property
     def graphic_field_count(self):
@@ -84,7 +84,7 @@ class GraphicField:
 
         :returns int: Graphic field count."
         """
-        return int(self.bytes_per_row * self._image.size[1])
+        return int(self.bytes_per_row * self._pil_image.size[1])
 
     @property
     def data_string(self):
@@ -93,7 +93,7 @@ class GraphicField:
 
         :returns str: Graphic field data string depending on compression type.
         """
-        image_bytes = self._image.tobytes()
+        image_bytes = self._pil_image.tobytes()
         data_string = ""
 
         if self._compression_type == "A":

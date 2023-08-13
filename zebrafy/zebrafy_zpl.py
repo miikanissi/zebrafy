@@ -23,11 +23,13 @@
 
 # 1. Standard library imports:
 import base64
+import io
 import re
 import zlib
 
 # 2. Known third party imports:
 from PIL import Image
+from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
 
 # 3. Local imports in the relative form:
 from .crc import CRC
@@ -40,13 +42,13 @@ GF_MATCHER = re.compile(
 class ZebrafyZPL:
     """
     Provides a method for converting Zebra Programming Language (ZPL) graphic fields \
-    to images.
+    to PDF and images.
 
     :param str zpl_data: A valid ZPL string.
     """
 
     def __init__(self, zpl_data, zid=None):
-        self.zpl_data = zpl_data
+        self._zpl_data = zpl_data
 
     def _match_dimensions(self, match):
         """
@@ -67,7 +69,7 @@ class ZebrafyZPL:
 
         :returns Image: A PIL Image from ZPL graphic fields.
         """
-        match = GF_MATCHER.search(self.zpl_data)
+        match = GF_MATCHER.search(self._zpl_data)
         if not match:
             raise ValueError("Could not find an image in ZPL content.")
 
@@ -92,6 +94,35 @@ class ZebrafyZPL:
         else:
             raise ValueError("Error")
 
-        image = Image.frombytes("1", (width, height), data_bytes)
+        pil_image = Image.frombytes("1", (width, height), data_bytes)
 
-        return image
+        return pil_image
+
+    def to_pdf(self):
+        """
+        Converts Zebra Programming Language (ZPL) graphic fields to PDF.
+
+        :returns bytes: PDF bytes from ZPL graphic fields.
+        """
+        pil_image = self.to_image()
+        image_bytes = io.BytesIO()
+        pil_image.save(image_bytes, format="JPEG")
+
+        pdf = PdfDocument.new()
+        image = PdfImage.new(pdf)
+        image.load_jpeg(image_bytes)
+        width, height = image.get_size()
+
+        matrix = PdfMatrix().scale(width, height)
+        image.set_matrix(matrix)
+
+        page = pdf.new_page(width, height)
+        page.insert_obj(image)
+        page.gen_content()
+
+        pdf_bytes = io.BytesIO()
+
+        # pypdfium2.PdfDocument save method not to be confused with PIL.Image save method
+        pdf.save(pdf_bytes)
+
+        return pdf_bytes.getvalue()
