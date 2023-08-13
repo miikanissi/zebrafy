@@ -47,6 +47,16 @@ class ZebrafyPDF:
     (Default: ``True``)
     :param int threshold: Black pixel threshold for undithered PDF (0-255)
     (Default: ``128``)
+    :param int width: Width of the image in the resulting ZPL. If 0, use default image \
+    width.
+    (Default: ``0``)
+    :param int height: Height of the image in the resulting ZPL. If 0, use default \
+    image height.
+    (Default: ``0``)
+    :param int pos_x: Optional x position of the image on the resulting ZPL.
+    (Default: ``0``)
+    :param int pos_y: Optional y position of the image on the resulting ZPL.
+    (Default: ``0``)
     :param bool complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field.
     (Default: ``True``)
@@ -59,6 +69,10 @@ class ZebrafyPDF:
         inverse=None,
         dither=None,
         threshold=None,
+        width=None,
+        height=None,
+        pos_x=None,
+        pos_y=None,
         complete_zpl=None,
     ):
         self._pdf_bytes = pdf_bytes
@@ -74,6 +88,18 @@ class ZebrafyPDF:
         if threshold is None:
             threshold = 128
         self._threshold = threshold
+        if width is None:
+            width = 0
+        self._width = width
+        if height is None:
+            height = 0
+        self._height = height
+        if pos_x is None:
+            pos_x = 0
+        self._pos_x = pos_x
+        if pos_y is None:
+            pos_y = 0
+        self._pos_y = pos_y
         if complete_zpl is None:
             complete_zpl = True
         self._complete_zpl = complete_zpl
@@ -97,6 +123,10 @@ class ZebrafyPDF:
                 inverse=self._inverse,
                 dither=self._dither,
                 threshold=self._threshold,
+                width=self._width,
+                height=self._height,
+                pos_x=self._pos_x,
+                pos_y=self._pos_y,
                 complete_zpl=False,
             )
             graphic_fields += zebrafy_image.to_zpl() + "\n"

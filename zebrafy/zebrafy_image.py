@@ -49,6 +49,16 @@ class ZebrafyImage:
     (Default: ``True``)
     :param int threshold: Black pixel threshold for undithered image (0-255)
     (Default: ``128``)
+    :param int width: Width of the image in the resulting ZPL. If 0, use default image \
+    width.
+    (Default: ``0``)
+    :param int height: Height of the image in the resulting ZPL. If 0, use default \
+    image height.
+    (Default: ``0``)
+    :param int pos_x: X position of the image on the resulting ZPL.
+    (Default: ``0``)
+    :param int pos_y: Y position of the image on the resulting ZPL.
+    (Default: ``0``)
     :param bool complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field.
     (Default: ``True``)
@@ -61,6 +71,10 @@ class ZebrafyImage:
         inverse=None,
         dither=None,
         threshold=None,
+        width=None,
+        height=None,
+        pos_x=None,
+        pos_y=None,
         complete_zpl=None,
     ):
         self._image = image
@@ -76,6 +90,18 @@ class ZebrafyImage:
         if threshold is None:
             threshold = 128
         self._threshold = threshold
+        if width is None:
+            width = 0
+        self._width = width
+        if height is None:
+            height = 0
+        self._height = height
+        if pos_x is None:
+            pos_x = 0
+        self._pos_x = pos_x
+        if pos_y is None:
+            pos_y = 0
+        self._pos_y = pos_y
         if complete_zpl is None:
             complete_zpl = True
         self._complete_zpl = complete_zpl
@@ -98,6 +124,16 @@ class ZebrafyImage:
                 ).format(source=self._image)
             )
 
+        # Resize image if width or height defined in parameters
+        if self._width or self._height:
+            width, height = pil_image.size
+            if self._width:
+                width = self._width
+            if self._height:
+                height = self._height
+            pil_image = pil_image.resize((width, height))
+
+        # Convert image to black and white based on given parameters
         if self._dither:
             pil_image = pil_image.convert("1")
             if self._inverse:
@@ -115,7 +151,14 @@ class ZebrafyImage:
 
         graphic_field = GraphicField(pil_image, compression_type=self._compression_type)
 
-        if self._complete_zpl:
-            return "^XA\n" + graphic_field.get_graphic_field() + "\n^XZ\n"
+        # Set graphic field position based on given parameters
+        pos = "^FO0,0"
+        if self._pos_x or self._pos_y:
+            pos = "^FO{x},{y}".format(x=self._pos_x, y=self._pos_y)
 
-        return graphic_field.get_graphic_field()
+        # Return complete ZPL with header and footer or only the graphic field based on
+        # given parameters
+        if self._complete_zpl:
+            return "^XA\n" + pos + graphic_field.get_graphic_field() + "\n^XZ\n"
+
+        return pos + graphic_field.get_graphic_field()
