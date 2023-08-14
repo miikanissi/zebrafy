@@ -41,7 +41,7 @@ class ZebrafyPDF:
         - "B": Base64 binary
         - "C": LZ77 / Zlib compressed base64 binary - best compression
     (Default: ``"A"``)
-    :param bool inverse: Invert the black and white in the resulting PDF
+    :param bool invert: Invert the black and white in the resulting PDF
     (Default: ``False``)
     :param bool dither: Dither the pixels instead of hard limit on black and white
     (Default: ``True``)
@@ -66,7 +66,7 @@ class ZebrafyPDF:
         self,
         pdf_bytes,
         compression_type=None,
-        inverse=None,
+        invert=None,
         dither=None,
         threshold=None,
         width=None,
@@ -79,9 +79,9 @@ class ZebrafyPDF:
         if compression_type is None:
             compression_type = "a"
         self._compression_type = compression_type.upper()
-        if inverse is None:
-            inverse = False
-        self._inverse = inverse
+        if invert is None:
+            invert = False
+        self._invert = invert
         if dither is None:
             dither = True
         self._dither = dither
@@ -120,7 +120,7 @@ class ZebrafyPDF:
             zebrafy_image = ZebrafyImage(
                 pil_image,
                 compression_type=self._compression_type,
-                inverse=self._inverse,
+                invert=self._invert,
                 dither=self._dither,
                 threshold=self._threshold,
                 width=self._width,

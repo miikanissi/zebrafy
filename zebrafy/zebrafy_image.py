@@ -43,7 +43,7 @@ class ZebrafyImage:
         - "B": Base64 binary
         - "C": LZ77 / Zlib compressed base64 binary - best compression
     (Default: ``"A"``)
-    :param bool inverse: Invert the black and white in resulting image
+    :param bool invert: Invert the black and white in resulting image
     (Default: ``False``)
     :param bool dither: Dither the pixels instead of hard limit on black and white
     (Default: ``True``)
@@ -68,7 +68,7 @@ class ZebrafyImage:
         self,
         image,
         compression_type=None,
-        inverse=None,
+        invert=None,
         dither=None,
         threshold=None,
         width=None,
@@ -81,9 +81,9 @@ class ZebrafyImage:
         if compression_type is None:
             compression_type = "a"
         self._compression_type = compression_type.upper()
-        if inverse is None:
-            inverse = False
-        self._inverse = inverse
+        if invert is None:
+            invert = False
+        self._invert = invert
         if dither is None:
             dither = True
         self._dither = dither
@@ -136,15 +136,15 @@ class ZebrafyImage:
         # Convert image to black and white based on given parameters
         if self._dither:
             pil_image = pil_image.convert("1")
-            if self._inverse:
+            if self._invert:
                 pil_image = pil_image.point(lambda x: 255 - x)
         else:
             pil_image = pil_image.convert("L")
             pil_image = pil_image.point(
                 lambda x: (
-                    (0 if self._inverse else 255)
+                    (0 if self._invert else 255)
                     if x > self._threshold
-                    else (255 if self._inverse else 0)
+                    else (255 if self._invert else 0)
                 ),
                 mode="1",
             )
