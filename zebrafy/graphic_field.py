@@ -96,9 +96,11 @@ class GraphicField:
         image_bytes = self._pil_image.tobytes()
         data_string = ""
 
+        # Compression type A: Convert bytes to ASCII hexadecimal
         if self._compression_type == "A":
             data_string = image_bytes.hex()
 
+        # Compression type B: Convert bytes to base64 and add header + CRC
         elif self._compression_type == "B":
             b64_bytes = base64.b64encode(image_bytes)
             data_string = ":B64:{encoded_data}:{crc}".format(
@@ -106,6 +108,8 @@ class GraphicField:
                 crc=CRC(b64_bytes).get_crc_hex_string(),
             )
 
+        # Compression type C: Convert LZ77/ Zlib compressed bytes to base64 and add
+        # header + CRC
         elif self._compression_type == "C":
             z64_bytes = base64.b64encode(zlib.compress(image_bytes))
             data_string = ":Z64:{encoded_data}:{crc}".format(

@@ -109,12 +109,28 @@ class TestZebrafy(unittest.TestCase):
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_image_width_height.zpl"))
 
+    def test_multiple_image_to_zpl(self):
+        """Test multiple images to ZPL with default options."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"),
+            complete_zpl=False,
+        ).to_zpl()
+        complete_zpl = "^XA\n" + gf_zpl + "\n" + gf_zpl + "\n^XZ\n"
+        self.assertEqual(
+            complete_zpl, self._read_static_file("test_image_multiple.zpl")
+        )
+
+    def test_image_not_bytes_or_pil_image(self):
+        zebrafy_image = ZebrafyImage("This is not an image")
+        with self.assertRaises(ValueError):
+            zebrafy_image.to_zpl()
+
     ####################
     # ZPL to Image Tests
     ####################
     def test_gfa_zpl_to_image(self):
         """Test ZPL GFA to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfa.zpl")).to_image()
+        image = ZebrafyZPL(self._read_static_file("test_image_gfa.zpl")).to_images()[0]
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
@@ -123,7 +139,7 @@ class TestZebrafy(unittest.TestCase):
 
     def test_gfb_zpl_to_image(self):
         """Test ZPL GFB to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfb.zpl")).to_image()
+        image = ZebrafyZPL(self._read_static_file("test_image_gfb.zpl")).to_images()[0]
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
@@ -132,7 +148,7 @@ class TestZebrafy(unittest.TestCase):
 
     def test_gfc_zpl_to_image(self):
         """Test ZPL GFC to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfc.zpl")).to_image()
+        image = ZebrafyZPL(self._read_static_file("test_image_gfc.zpl")).to_images()[0]
         image_bytes = io.BytesIO()
         image.save(image_bytes, format="PNG")
         self.assertEqual(
@@ -145,7 +161,7 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_image_broken.zpl"),
         )
         with self.assertRaises(ValueError):
-            zebrafy_broken_zpl.to_image()
+            zebrafy_broken_zpl.to_images()
 
     ##################
     # PDF to ZPL Tests

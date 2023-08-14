@@ -50,53 +50,64 @@ class ZebrafyZPL:
     def __init__(self, zpl_data, zid=None):
         self._zpl_data = zpl_data
 
-    def _match_dimensions(self, match):
+    def _match_dimensions(self, total, width):
         """
         Get image dimensions from ZPL graphic field.
 
-        :param Match match: A RegEx Match object
+        :param int total: Total number of bytes comprising the graphic format.
+        :param int width: Total number of bytes comprising one row of the data.
         :returns tuple: A tuple of integers containing the width and height of the \
         graphic field image.
         """
-        total = int(match.group(3))
-        width = int(match.group(4))
 
         return int(width * 8), int(total / width)
 
-    def to_image(self):
+    def to_images(self):
         """
         Converts Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
 
-        :returns Image: A PIL Image from ZPL graphic fields.
+        :returns list: A list containing PIL Images converted from ZPL graphic fields.
         """
-        match = GF_MATCHER.search(self._zpl_data)
-        if not match:
-            raise ValueError("Could not find an image in ZPL content.")
+        matches = GF_MATCHER.findall(self._zpl_data)
+        if not matches:
+            raise ValueError("Could not find a graphic field (^GF) in ZPL content.")
 
-        width, height = self._match_dimensions(match)
-        compression_type = match.group(1).upper()
-        data_bytes = match.group(5)
+        pil_images = []
+        for match in matches:
+            width, height = self._match_dimensions(int(match[2]), int(match[3]))
+            compression_type = match[0].upper()
+            data_bytes = match[4]
 
-        if (compression_type == "C" and data_bytes.startswith(":Z64")) or (
-            compression_type == "B" and data_bytes.startswith(":B64")
-        ):
-            crc = data_bytes[-4:]
-            data_bytes = data_bytes[5:-5]
-            if crc != CRC(data_bytes.encode("ascii")).get_crc_hex_string():
-                raise ValueError("CRC mismatch.")
-            data_bytes = base64.b64decode(data_bytes)
-            if compression_type == "C":
-                data_bytes = zlib.decompress(data_bytes)
+            # Compression types B and C have base64 encoded data
+            if (compression_type == "C" and data_bytes.startswith(":Z64")) or (
+                compression_type == "B" and data_bytes.startswith(":B64")
+            ):
+                crc = data_bytes[-4:]
+                data_bytes = data_bytes[5:-5]
 
-        elif compression_type == "A":
-            data_bytes = bytes.fromhex(data_bytes)
+                # Validate CRC to ensure data bytes are valid and unchanged
+                if crc != CRC(data_bytes.encode("ascii")).get_crc_hex_string():
+                    raise ValueError("CRC mismatch.")
 
-        else:
-            raise ValueError("Error")
+                data_bytes = base64.b64decode(data_bytes)
 
-        pil_image = Image.frombytes("1", (width, height), data_bytes)
+                # Compression type C: decompress LZ77 / Zlib compression
+                if compression_type == "C":
+                    data_bytes = zlib.decompress(data_bytes)
 
-        return pil_image
+            # Compression type A contains ASCII hexadecimal data
+            elif compression_type == "A":
+                data_bytes = bytes.fromhex(data_bytes)
+
+            else:
+                raise ValueError(
+                    "No valid compression type found in ZPL graphic field (^GF)."
+                )
+
+            pil_image = Image.frombytes("1", (width, height), data_bytes)
+            pil_images.append(pil_image)
+
+        return pil_images
 
     def to_pdf(self):
         """
@@ -104,24 +115,27 @@ class ZebrafyZPL:
 
         :returns bytes: PDF bytes from ZPL graphic fields.
         """
-        pil_image = self.to_image()
-        image_bytes = io.BytesIO()
-        pil_image.save(image_bytes, format="JPEG")
-
+        pil_images = self.to_images()
         pdf = PdfDocument.new()
-        image = PdfImage.new(pdf)
-        image.load_jpeg(image_bytes)
-        width, height = image.get_size()
 
-        matrix = PdfMatrix().scale(width, height)
-        image.set_matrix(matrix)
+        for pil_image in pil_images:
+            # Save PIL Image as JPEG bytes for pypdfium2 to convert into PDF.
+            image_bytes = io.BytesIO()
+            pil_image.save(image_bytes, format="JPEG")
 
-        page = pdf.new_page(width, height)
-        page.insert_obj(image)
-        page.gen_content()
+            # Load image bytes into PDF Image using pypdfium2 and get size
+            image = PdfImage.new(pdf)
+            image.load_jpeg(image_bytes)
+            width, height = image.get_size()
+            matrix = PdfMatrix().scale(width, height)
+            image.set_matrix(matrix)
+
+            # Save PDF Image on a new page on the PDF.
+            page = pdf.new_page(width, height)
+            page.insert_obj(image)
+            page.gen_content()
 
         pdf_bytes = io.BytesIO()
-
         # pypdfium2.PdfDocument save method not to be confused with PIL.Image save method
         pdf.save(pdf_bytes)
 
