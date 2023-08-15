@@ -31,6 +31,12 @@ test = [
     "pytest-cov",
 ]
 
+docs = [
+    "sphinx",
+    "sphinx_autodoc_typehints",
+    "sphinx_rtd_theme>=1.2.0",
+]
+
 [[project.authors]]
 name = "Miika Nissi"
 email = "miika@miikanissi.com"

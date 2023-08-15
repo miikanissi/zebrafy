@@ -44,29 +44,29 @@ class ZebrafyZPL:
     Provides a method for converting Zebra Programming Language (ZPL) graphic fields \
     to PDF and images.
 
-    :param str zpl_data: A valid ZPL string.
+    :param zpl_data: A valid ZPL string.
     """
 
-    def __init__(self, zpl_data, zid=None):
+    def __init__(self, zpl_data: str):
         self._zpl_data = zpl_data
 
-    def _match_dimensions(self, total, width):
+    def _match_dimensions(self, total: int, width: int) -> tuple[int, int]:
         """
         Get image dimensions from ZPL graphic field.
 
-        :param int total: Total number of bytes comprising the graphic format.
-        :param int width: Total number of bytes comprising one row of the data.
-        :returns tuple: A tuple of integers containing the width and height of the \
+        :param total: Total number of bytes comprising the graphic format.
+        :param width: Total number of bytes comprising one row of the data.
+        :returns: A tuple of integers containing the width and height of the \
         graphic field image.
         """
 
         return int(width * 8), int(total / width)
 
-    def to_images(self):
+    def to_images(self) -> list[Image.Image]:
         """
         Converts Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
 
-        :returns list: A list containing PIL Images converted from ZPL graphic fields.
+        :returns: A list containing PIL Images converted from ZPL graphic fields.
         """
         matches = GF_MATCHER.findall(self._zpl_data)
         if not matches:
@@ -109,11 +109,11 @@ class ZebrafyZPL:
 
         return pil_images
 
-    def to_pdf(self):
+    def to_pdf(self) -> bytes:
         """
         Converts Zebra Programming Language (ZPL) graphic fields to PDF.
 
-        :returns bytes: PDF bytes from ZPL graphic fields.
+        :returns: PDF bytes from ZPL graphic fields.
         """
         pil_images = self.to_images()
         pdf = PdfDocument.new()

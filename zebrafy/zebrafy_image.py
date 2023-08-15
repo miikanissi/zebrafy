@@ -23,6 +23,7 @@
 
 # 1. Standard library imports:
 from io import BytesIO
+from typing import Union
 
 # 2. Known third party imports:
 from PIL import Image
@@ -36,46 +37,40 @@ class ZebrafyImage:
     Provides a method for converting PIL Image or image bytes to Zebra Programming \
     Language (ZPL).
 
-    :param Union[bytes,Image] image: Image as a PIL Image or bytes object.
-    :param str compression_type: ZPL compression type parameter that accepts the \
-    following values:
-        - "A": ASCII hexadecimal - most compatible
+    :param image: Image as a PIL Image or bytes object.
+    :param compression_type: ZPL compression type parameter that accepts the \
+    following values, defaults to "A":
+
+        - "A": ASCII hexadecimal - most compatible (default)
         - "B": Base64 binary
         - "C": LZ77 / Zlib compressed base64 binary - best compression
-    (Default: ``"A"``)
-    :param bool invert: Invert the black and white in resulting image
-    (Default: ``False``)
-    :param bool dither: Dither the pixels instead of hard limit on black and white
-    (Default: ``True``)
-    :param int threshold: Black pixel threshold for undithered image (0-255)
-    (Default: ``128``)
-    :param int width: Width of the image in the resulting ZPL. If 0, use default image \
-    width.
-    (Default: ``0``)
-    :param int height: Height of the image in the resulting ZPL. If 0, use default \
-    image height.
-    (Default: ``0``)
-    :param int pos_x: X position of the image on the resulting ZPL.
-    (Default: ``0``)
-    :param int pos_y: Y position of the image on the resulting ZPL.
-    (Default: ``0``)
-    :param bool complete_zpl: Return a complete ZPL with header and footer included. \
-    Otherwise return only the graphic field.
-    (Default: ``True``)
+    :param invert: Invert the black and white in resulting image, defaults to False
+    :param dither: Dither the pixels instead of hard limit on black and white, \
+    defaults to False
+    :param threshold: Black pixel threshold for undithered image (0-255), defaults \
+    to 128
+    :param width: Width of the image in the resulting ZPL. If 0, use default image \
+    width, defaults to 0
+    :param height: Height of the image in the resulting ZPL. If 0, use default \
+    image height, defaults to 0
+    :param pos_x: X position of the image on the resulting ZPL, defaults to 0
+    :param pos_y: Y position of the image on the resulting ZPL, defaults to 0
+    :param complete_zpl: Return a complete ZPL with header and footer included. \
+    Otherwise return only the graphic field, defaults to True
     """
 
     def __init__(
         self,
-        image,
-        compression_type=None,
-        invert=None,
-        dither=None,
-        threshold=None,
-        width=None,
-        height=None,
-        pos_x=None,
-        pos_y=None,
-        complete_zpl=None,
+        image: Union[bytes, Image.Image],
+        compression_type: str = None,
+        invert: bool = None,
+        dither: bool = None,
+        threshold: int = None,
+        width: int = None,
+        height: int = None,
+        pos_x: int = None,
+        pos_y: int = None,
+        complete_zpl: bool = None,
     ):
         self._image = image
         if compression_type is None:
@@ -106,11 +101,11 @@ class ZebrafyImage:
             complete_zpl = True
         self._complete_zpl = complete_zpl
 
-    def to_zpl(self):
+    def to_zpl(self) -> str:
         """
         Converts PIL Image or image bytes to Zebra Programming Language (ZPL).
 
-        :returns str: A complete ZPL file string which can be sent to a ZPL compatible \
+        :returns: A complete ZPL file string which can be sent to a ZPL compatible \
         printer or a ZPL graphic field if complete_zpl is not set.
         """
         if isinstance(self._image, Image.Image):

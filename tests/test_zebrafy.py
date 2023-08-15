@@ -25,6 +25,7 @@
 import io
 import os
 import unittest
+from typing import Union
 
 # 2. Known third party imports:
 # 3. Local imports in the relative form:
@@ -32,12 +33,12 @@ from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL, __version__
 
 
 class TestZebrafy(unittest.TestCase):
-    def _read_static_file(self, file_name):
+    def _read_static_file(self, file_name: str) -> Union[bytes, str]:
         """
         Helper method to read a test file from static directory.
 
-        :param str file_name: File name of a file in tests/static directory.
-        :returns Union[bytes,str]: File contents as bytes or string
+        :param file_name: File name of a file in tests/static directory.
+        :returns: File contents as bytes or string
         """
         open_mode = "r" if file_name.endswith(".zpl") else "rb"
         with open(

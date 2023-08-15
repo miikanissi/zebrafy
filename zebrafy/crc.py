@@ -34,22 +34,22 @@ class CRC:
 
     CRC-16-CCITT polynomial representation: x^{16} + x^{12} + x^5 + 1
 
-    :param bytes data_bytes: Bytes object for which to calculate CRC.
-    :param int poly: Reversed polynomial representation for CRC-16-CCITT calculation.
-    (Default: ``0x8408``)
+    :param data_bytes: Bytes object for which to calculate CRC
+    :param poly: Reversed polynomial representation for CRC-16-CCITT calculation, \
+    defaults to 0x8408
     """
 
-    def __init__(self, data_bytes, poly=None):
+    def __init__(self, data_bytes: bytes, poly: int = None):
         self._data_bytes = data_bytes
         if poly is None:
             poly = 0x8408
         self._poly = poly
 
-    def _get_crc16_ccitt(self):
+    def _get_crc16_ccitt(self) -> int:
         """
         Calculate CRC-16-CCITT Algorithm.
 
-        :returns int: CRC-16-CCITT
+        :returns: CRC-16-CCITT
         """
         data = bytearray(self._data_bytes)
         crc = 0xFFFF
@@ -66,10 +66,10 @@ class CRC:
 
         return crc & 0xFFFF
 
-    def get_crc_hex_string(self):
+    def get_crc_hex_string(self) -> str:
         """
         Get CRC-16-CCITT as four digit zero padding hexadecimal string.
 
-        :returns str: CRC-16-CCITT as four digit zero padding hexadecimal string.
+        :returns: CRC-16-CCITT as four digit zero padding hexadecimal string
         """
         return "%04X" % self._get_crc16_ccitt()

@@ -4,8 +4,6 @@
 [Zebra Programming Language (ZPL)](https://en.wikipedia.org/wiki/Zebra_Programming_Language)
 graphic fields (^GF).
 
-## Getting Started
-
 **Zebrafy** consists of three conversion tools:
 
 - **ZebrafyImage** — convert an image into valid ZPL
@@ -26,6 +24,8 @@ If you want more control over the resulting ZPL data, **ZebrafyImage** and
 | `pos_x`            | Pixel x position of the graphic field in resulting ZPL (Default `0`)                                                                                                        |
 | `pos_y`            | Pixel y position of the graphic field in resulting ZPL (Default `0`)                                                                                                        |
 | `complete_zpl`     | Add ZPL header and footer for complete ZPL output which is ready to be sent on a printer, or only get the ZPL graphic field output (`True` or `False`, Default `True`)      |
+
+## Getting Started
 
 ### Installation
 
