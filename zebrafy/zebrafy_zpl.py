@@ -28,13 +28,6 @@ import re
 import sys
 import zlib
 
-if sys.version_info >= (3, 9):
-    DimensionsType = tuple[int, int]
-else:
-    from typing import Tuple
-
-    DimensionsType = Tuple[int, int]
-
 # 2. Known third party imports:
 from PIL import Image
 from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
@@ -45,6 +38,15 @@ from .crc import CRC
 GF_MATCHER = re.compile(
     r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS"
 )
+
+if sys.version_info >= (3, 9):
+    DimensionsType = tuple[int, int]
+    ToImagesType = list[Image.Image]
+else:
+    from typing import List, Tuple
+
+    ToImagesType = List[Image.Image]
+    DimensionsType = Tuple[int, int]
 
 
 class ZebrafyZPL:
@@ -70,7 +72,7 @@ class ZebrafyZPL:
 
         return int(width * 8), int(total / width)
 
-    def to_images(self) -> list[Image.Image]:
+    def to_images(self) -> ToImagesType:
         """
         Converts Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
 
