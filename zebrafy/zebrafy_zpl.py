@@ -25,7 +25,15 @@
 import base64
 import io
 import re
+import sys
 import zlib
+
+if sys.version_info >= (3, 9):
+    DimensionsType = tuple[int, int]
+else:
+    from typing import Tuple
+
+    DimensionsType = Tuple[int, int]
 
 # 2. Known third party imports:
 from PIL import Image
@@ -50,7 +58,7 @@ class ZebrafyZPL:
     def __init__(self, zpl_data: str):
         self._zpl_data = zpl_data
 
-    def _match_dimensions(self, total: int, width: int) -> tuple[int, int]:
+    def _match_dimensions(self, total: int, width: int) -> DimensionsType:
         """
         Get image dimensions from ZPL graphic field.
 
