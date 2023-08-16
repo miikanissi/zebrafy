@@ -32,7 +32,15 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# -- Options for EPUB output
+epub_show_urls = "footnote"
+
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 
 # -- Options for HTML output -------------------------------------------------

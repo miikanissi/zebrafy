@@ -39,24 +39,24 @@ class ZebrafyImage:
 
     :param image: Image as a PIL Image or bytes object.
     :param compression_type: ZPL compression type parameter that accepts the \
-    following values, defaults to "A":
+    following values, defaults to ``"A"``:
 
-        - "A": ASCII hexadecimal - most compatible (default)
-        - "B": Base64 binary
-        - "C": LZ77 / Zlib compressed base64 binary - best compression
-    :param invert: Invert the black and white in resulting image, defaults to False
+        - ``"A"``: ASCII hexadecimal - most compatible (default)
+        - ``"B"``: Base64 binary
+        - ``"C"``: LZ77 / Zlib compressed base64 binary - best compression
+    :param invert: Invert the black and white in resulting image, defaults to ``False``
     :param dither: Dither the pixels instead of hard limit on black and white, \
-    defaults to False
-    :param threshold: Black pixel threshold for undithered image (0-255), defaults \
-    to 128
-    :param width: Width of the image in the resulting ZPL. If 0, use default image \
-    width, defaults to 0
-    :param height: Height of the image in the resulting ZPL. If 0, use default \
-    image height, defaults to 0
-    :param pos_x: X position of the image on the resulting ZPL, defaults to 0
-    :param pos_y: Y position of the image on the resulting ZPL, defaults to 0
+    defaults to ``False``
+    :param threshold: Black pixel threshold for undithered image (``0-255``), defaults \
+    to ``128``
+    :param width: Width of the image in the resulting ZPL. If ``0``, use default image \
+    width, defaults to ``0``
+    :param height: Height of the image in the resulting ZPL. If ``0``, use default \
+    image height, defaults to ``0``
+    :param pos_x: X position of the image on the resulting ZPL, defaults to ``0``
+    :param pos_y: Y position of the image on the resulting ZPL, defaults to ``0``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
-    Otherwise return only the graphic field, defaults to True
+    Otherwise return only the graphic field, defaults to ``True``
     """
 
     def __init__(

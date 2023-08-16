@@ -1,24 +1,8 @@
-zebrafy package
-===============
+Zebrafy
+=======
 
 Submodules
 ----------
-
-zebrafy.crc module
-------------------
-
-.. automodule:: zebrafy.crc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-zebrafy.graphic\_field module
------------------------------
-
-.. automodule:: zebrafy.graphic_field
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 zebrafy.zebrafy\_image module
 -----------------------------
@@ -44,10 +28,18 @@ zebrafy.zebrafy\_zpl module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+zebrafy.crc module
+---------------------------
 
-.. automodule:: zebrafy
+.. automodule:: zebrafy.crc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+zebrafy.graphic_field module
+---------------------------
+
+.. automodule:: zebrafy.graphic_field
    :members:
    :undoc-members:
    :show-inheritance:

@@ -36,7 +36,7 @@ class CRC:
 
     :param data_bytes: Bytes object for which to calculate CRC
     :param poly: Reversed polynomial representation for CRC-16-CCITT calculation, \
-    defaults to 0x8408
+    defaults to ``0x8408``
     """
 
     def __init__(self, data_bytes: bytes, poly: int = None):

@@ -31,7 +31,7 @@ test = [
     "pytest-cov",
 ]
 
-docs = [
+dev = [
     "sphinx",
     "sphinx_autodoc_typehints",
     "sphinx_rtd_theme>=1.2.0",

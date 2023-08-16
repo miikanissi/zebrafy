@@ -38,11 +38,11 @@ class GraphicField:
 
     :param PIL.Image.Image image: An instance of a PIL Image.
     :param compression_type: ZPL compression type parameter that accepts the \
-    following values, defaults to "A":
+    following values, defaults to ``"A"``:
 
-        - "A": ASCII hexadecimal - most compatible (default)
-        - "B": Base64 binary
-        - "C": LZ77 / Zlib compressed base64 binary - best compression
+        - ``"A"``: ASCII hexadecimal - most compatible (default)
+        - ``"B"``: Base64 binary
+        - ``"C"``: LZ77 / Zlib compressed base64 binary - best compression
     """
 
     def __init__(self, pil_image: Image, compression_type: str = None):

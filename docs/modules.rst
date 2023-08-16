@@ -1,5 +1,5 @@
-zebrafy
-=======
+API
+===
 
 .. toctree::
    :maxdepth: 4
