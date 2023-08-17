@@ -49,11 +49,11 @@ email = "miika@miikanissi.com"
 text = "LGPLv3"
 
 [project.readme]
-file = "README.md"
-content-type = "text/markdown"
+file = "README.rst"
+content-type = "text/x-rst"
 
 [project.urls]
-Homepage = "https://github.com/miikanissi/zebrafy"
+Homepage = "https://github.com/miikanissi/zebrafy/"
 
 [tool.setuptools]
 include-package-data = false
