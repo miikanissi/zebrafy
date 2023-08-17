@@ -22,6 +22,7 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import operator
 
 # 2. Known third party imports:
 from pypdfium2 import PdfDocument
@@ -44,14 +45,14 @@ class ZebrafyPDF:
     :param invert: Invert the black and white in resulting image, defaults to ``False``
     :param dither: Dither the pixels instead of hard limit on black and white, \
     defaults to ``False``
-    :param threshold: Black pixel threshold for undithered image (``0-255``), defaults \
+    :param threshold: Black pixel threshold for undithered PDF (``0-255``), defaults \
     to ``128``
-    :param width: Width of the image in the resulting ZPL. If ``0``, use default image \
+    :param width: Width of the PDF in the resulting ZPL. If ``0``, use default PDF \
     width, defaults to ``0``
-    :param height: Height of the image in the resulting ZPL. If ``0``, use default \
-    image height, defaults to ``0``
-    :param pos_x: X position of the image on the resulting ZPL, defaults to ``0``
-    :param pos_y: Y position of the image on the resulting ZPL, defaults to ``0``
+    :param height: Height of the PDF in the resulting ZPL. If ``0``, use default \
+    PDF height, defaults to ``0``
+    :param pos_x: X position of the PDF on the resulting ZPL, defaults to ``0``
+    :param pos_y: Y position of the PDF on the resulting ZPL, defaults to ``0``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field, defaults to ``True``
     """
@@ -69,34 +70,183 @@ class ZebrafyPDF:
         pos_y: int = None,
         complete_zpl: bool = None,
     ):
-        self._pdf_bytes = pdf_bytes
+        self.pdf_bytes = pdf_bytes
         if compression_type is None:
             compression_type = "a"
-        self._compression_type = compression_type.upper()
+        self.compression_type = compression_type.upper()
         if invert is None:
             invert = False
-        self._invert = invert
+        self.invert = invert
         if dither is None:
             dither = True
-        self._dither = dither
+        self.dither = dither
         if threshold is None:
             threshold = 128
-        self._threshold = threshold
+        self.threshold = threshold
         if width is None:
             width = 0
-        self._width = width
+        self.width = width
         if height is None:
             height = 0
-        self._height = height
+        self.height = height
         if pos_x is None:
             pos_x = 0
-        self._pos_x = pos_x
+        self.pos_x = pos_x
         if pos_y is None:
             pos_y = 0
-        self._pos_y = pos_y
+        self.pos_y = pos_y
         if complete_zpl is None:
             complete_zpl = True
-        self._complete_zpl = complete_zpl
+        self.complete_zpl = complete_zpl
+
+    pdf_bytes = property(operator.attrgetter("_pdf_bytes"))
+
+    @pdf_bytes.setter
+    def pdf_bytes(self, p):
+        if not p:
+            raise ValueError("PDF cannot be empty.")
+        if not isinstance(p, bytes):
+            raise TypeError(
+                "PDF must be a valid bytes object {param_type} was given.".format(
+                    param_type=type(p)
+                )
+            )
+        self._pdf_bytes = p
+
+    compression_type = property(operator.attrgetter("_compression_type"))
+
+    @compression_type.setter
+    def compression_type(self, c):
+        if c is None:
+            raise ValueError("Compression type cannot be empty.")
+        if not isinstance(c, str):
+            raise TypeError(
+                "Compression type must be a valid string. {param_type} was given."
+                .format(param_type=type(c))
+            )
+        if c not in ["A", "B", "C"]:
+            raise ValueError(
+                'Compression type must be "A","B", or "C". {param} was given.'.format(
+                    param=c
+                )
+            )
+        self._compression_type = c
+
+    invert = property(operator.attrgetter("_invert"))
+
+    @invert.setter
+    def invert(self, i):
+        if i is None:
+            raise ValueError("Invert cannot be empty.")
+        if not isinstance(i, bool):
+            raise TypeError(
+                "Invert must be a boolean. {param_type} was given.".format(
+                    param_type=type(i)
+                )
+            )
+        self._invert = i
+
+    dither = property(operator.attrgetter("_dither"))
+
+    @dither.setter
+    def dither(self, d):
+        if d is None:
+            raise ValueError("Dither cannot be empty.")
+        if not isinstance(d, bool):
+            raise TypeError(
+                "Dither must be a boolean. {param_type} was given.".format(
+                    param_type=type(d)
+                )
+            )
+        self._dither = d
+
+    threshold = property(operator.attrgetter("_threshold"))
+
+    @threshold.setter
+    def threshold(self, t):
+        if t is None:
+            raise ValueError("Threshold cannot be empty.")
+        if not isinstance(t, int):
+            raise TypeError(
+                "Threshold must be an integer. {param_type} was given.".format(
+                    param_type=type(t)
+                )
+            )
+        if t < 0 or t > 255:
+            raise ValueError(
+                "Threshold must be within 0 to 255. {param} was given.".format(param=t)
+            )
+        self._threshold = t
+
+    width = property(operator.attrgetter("_width"))
+
+    @width.setter
+    def width(self, w):
+        if w is None:
+            raise ValueError("Width cannot be empty.")
+        if not isinstance(w, int):
+            raise TypeError(
+                "Width must be an integer. {param_type} was given.".format(
+                    param_type=type(w)
+                )
+            )
+        self._width = w
+
+    height = property(operator.attrgetter("_height"))
+
+    @height.setter
+    def height(self, h):
+        if h is None:
+            raise ValueError("Height cannot be empty.")
+        if not isinstance(h, int):
+            raise TypeError(
+                "Height must be an integer. {param_type} was given.".format(
+                    param_type=type(h)
+                )
+            )
+        self._height = h
+
+    pos_x = property(operator.attrgetter("_pos_x"))
+
+    @pos_x.setter
+    def pos_x(self, x):
+        if x is None:
+            raise ValueError("X position cannot be empty.")
+        if not isinstance(x, int):
+            raise TypeError(
+                "X position must be an integer. {param_type} was given.".format(
+                    param_type=type(x)
+                )
+            )
+        self._pos_x = x
+
+    pos_y = property(operator.attrgetter("_pos_y"))
+
+    @pos_y.setter
+    def pos_y(self, y):
+        if y is None:
+            raise ValueError("Y position cannot be empty.")
+        if not isinstance(y, int):
+            raise TypeError(
+                "Y position must be an integer. {param_type} was given.".format(
+                    param_type=type(y)
+                )
+            )
+        self._pos_y = y
+
+    complete_zpl = property(operator.attrgetter("_complete_zpl"))
+
+    @complete_zpl.setter
+    def complete_zpl(self, c):
+        if c is None:
+            raise ValueError("Complete ZPL cannot be empty.")
+        if not isinstance(c, bool):
+            raise TypeError(
+                "Complete ZPL must be a boolean. {param_type} was given.".format(
+                    param_type=type(c)
+                )
+            )
+        self._complete_zpl = c
 
     def to_zpl(self) -> str:
         """

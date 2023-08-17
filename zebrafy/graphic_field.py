@@ -23,6 +23,7 @@
 
 # 1. Standard library imports:
 import base64
+import operator
 import zlib
 
 # 2. Known third party imports:
@@ -46,10 +47,42 @@ class GraphicField:
     """
 
     def __init__(self, pil_image: Image, compression_type: str = None):
-        self._pil_image = pil_image
+        self.pil_image = pil_image
         if compression_type is None:
             compression_type = "a"
-        self._compression_type = compression_type.upper()
+        self.compression_type = compression_type.upper()
+
+    pil_image = property(operator.attrgetter("_pil_image"))
+
+    @pil_image.setter
+    def pil_image(self, i):
+        if not i:
+            raise ValueError("Image cannot be empty.")
+        if not isinstance(i, Image):
+            raise TypeError(
+                "Image must be a valid PIL.Image.Image object. {param_type} was given."
+                .format(param_type=type(i))
+            )
+        self._pil_image = i
+
+    compression_type = property(operator.attrgetter("_compression_type"))
+
+    @compression_type.setter
+    def compression_type(self, c):
+        if c is None:
+            raise ValueError("Compression type cannot be empty.")
+        if not isinstance(c, str):
+            raise TypeError(
+                "Compression type must be a valid string. {param_type} was given."
+                .format(param_type=type(c))
+            )
+        if c not in ["A", "B", "C"]:
+            raise ValueError(
+                'Compression type must be "A","B", or "C". {param} was given.'.format(
+                    param=c
+                )
+            )
+        self._compression_type = c
 
     def _get_binary_byte_count(self) -> int:
         """

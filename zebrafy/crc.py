@@ -22,6 +22,7 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import operator
 
 # 2. Known third party imports:
 
@@ -40,10 +41,37 @@ class CRC:
     """
 
     def __init__(self, data_bytes: bytes, poly: int = None):
-        self._data_bytes = data_bytes
+        self.data_bytes = data_bytes
         if poly is None:
             poly = 0x8408
-        self._poly = poly
+        self.poly = poly
+
+    data_bytes = property(operator.attrgetter("_data_bytes"))
+
+    @data_bytes.setter
+    def data_bytes(self, d):
+        if d is None:
+            raise ValueError("Bytes data cannot be empty.")
+        if not isinstance(d, bytes):
+            raise TypeError(
+                "Bytes data must be a valid bytes object. {param_type} was given."
+                .format(param_type=type(d))
+            )
+        self._data_bytes = d
+
+    poly = property(operator.attrgetter("_poly"))
+
+    @poly.setter
+    def poly(self, p):
+        if p is None:
+            raise ValueError("Polynomial cannot be empty.")
+        if not isinstance(p, int):
+            raise TypeError(
+                "Polynomial must be a valid integer. {param_type} was given.".format(
+                    param_type=type(p)
+                )
+            )
+        self._poly = p
 
     def _get_crc16_ccitt(self) -> int:
         """

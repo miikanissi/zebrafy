@@ -29,7 +29,7 @@ zebrafy.zebrafy\_zpl module
    :show-inheritance:
 
 zebrafy.crc module
----------------------------
+------------------
 
 .. automodule:: zebrafy.crc
    :members:
@@ -37,7 +37,7 @@ zebrafy.crc module
    :show-inheritance:
 
 zebrafy.graphic_field module
----------------------------
+----------------------------
 
 .. automodule:: zebrafy.graphic_field
    :members:

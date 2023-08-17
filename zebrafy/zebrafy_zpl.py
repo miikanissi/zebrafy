@@ -24,6 +24,7 @@
 # 1. Standard library imports:
 import base64
 import io
+import operator
 import re
 import sys
 import zlib
@@ -58,7 +59,21 @@ class ZebrafyZPL:
     """
 
     def __init__(self, zpl_data: str):
-        self._zpl_data = zpl_data
+        self.zpl_data = zpl_data
+
+    zpl_data = property(operator.attrgetter("_zpl_data"))
+
+    @zpl_data.setter
+    def zpl_data(self, d):
+        if d is None:
+            raise ValueError("ZPL data cannot be empty.")
+        if not isinstance(d, str):
+            raise TypeError(
+                "ZPL data must be a valid ZPL string. {param_type} was given.".format(
+                    param_type=type(d)
+                )
+            )
+        self._zpl_data = d
 
     def _match_dimensions(self, total: int, width: int) -> DimensionsType:
         """

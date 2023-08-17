@@ -28,8 +28,10 @@ import unittest
 from typing import Union
 
 # 2. Known third party imports:
+from PIL import Image
+
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL, __version__
+from zebrafy import CRC, GraphicField, ZebrafyImage, ZebrafyPDF, ZebrafyZPL, __version__
 
 
 class TestZebrafy(unittest.TestCase):
@@ -51,9 +53,140 @@ class TestZebrafy(unittest.TestCase):
         """Test package version."""
         self.assertEqual(__version__, "0.1.0")
 
+    ###########
+    # CRC Tests
+    ###########
+    def test_crc_data_bytes(self):
+        with self.assertRaises(ValueError):
+            CRC(None)
+        with self.assertRaises(TypeError):
+            CRC(123)
+
+    def test_crc_poly(self):
+        crc = CRC(b"Python is fun")
+        with self.assertRaises(ValueError):
+            crc.poly = None
+        with self.assertRaises(TypeError):
+            crc.poly = "Test"
+
     ####################
-    # Image to ZPL Tests
+    # GraphicField Tests
     ####################
+    def test_graphic_field_image(self):
+        with self.assertRaises(ValueError):
+            GraphicField(None)
+        with self.assertRaises(TypeError):
+            GraphicField(123)
+
+    def test_graphic_field_compression_type(self):
+        im = Image.new(mode="RGB", size=(200, 200))
+        gf = GraphicField(im)
+        with self.assertRaises(ValueError):
+            gf.compression_type = None
+        with self.assertRaises(TypeError):
+            gf.compression_type = 123
+        with self.assertRaises(ValueError):
+            gf.compression_type = "D"
+
+    ####################
+    # ZebrafyImage Tests
+    ####################
+    # Input validation
+    def test_zebrafy_image_image(self):
+        """Test ZebrafyImage image input"""
+        with self.assertRaises(ValueError):
+            ZebrafyImage(None)
+        with self.assertRaises(TypeError):
+            ZebrafyImage(123)
+
+    def test_zebrafy_image_compression_type(self):
+        """Test ZebrafyImage compression_type input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.compression_type = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.compression_type = 123
+        with self.assertRaises(ValueError):
+            zebrafy_image.compression_type = "D"
+
+    def test_zebrafy_image_invert(self):
+        """Test ZebrafyImage invert input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.invert = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.invert = "123"
+
+    def test_zebrafy_image_dither(self):
+        """Test ZebrafyImage dither input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.dither = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.dither = "123"
+
+    def test_zebrafy_image_threshold(self):
+        """Test ZebrafyImage threshold input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.threshold = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.threshold = "123"
+        with self.assertRaises(ValueError):
+            zebrafy_image.threshold = -1
+        with self.assertRaises(ValueError):
+            zebrafy_image.threshold = 256
+
+    def test_zebrafy_image_width(self):
+        """Test ZebrafyImage width input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.width = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.width = "123"
+
+    def test_zebrafy_image_height(self):
+        """Test ZebrafyImage height input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.height = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.height = "123"
+
+    def test_zebrafy_image_pos_x(self):
+        """Test ZebrafyImage pos_x input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.pos_x = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.pos_x = "123"
+
+    def test_zebrafy_image_pos_y(self):
+        """Test ZebrafyImage pos_y input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.pos_y = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.pos_y = "123"
+
+    def test_zebrafy_image_complete_zpl(self):
+        """Test ZebrafyImage complete_zpl input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.complete_zpl = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.complete_zpl = "123"
+
+    # Output validation
     def test_image_to_default_zpl(self):
         """Test image to ZPL with default options."""
         default_zpl = ZebrafyImage(self._read_static_file("test_image.png")).to_zpl()
@@ -80,6 +213,22 @@ class TestZebrafy(unittest.TestCase):
         ).to_zpl()
         self.assertEqual(gfc_zpl, self._read_static_file("test_image_gfc.zpl"))
 
+    def test_image_to_zpl_invert(self):
+        """Test image to ZPL inverting the image."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), invert=True
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_image_invert.zpl"))
+
+    def test_image_to_zpl_invert_no_dither(self):
+        """Test image to ZPL without dithering and inverting the image."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), dither=False, invert=True
+        ).to_zpl()
+        self.assertEqual(
+            gf_zpl, self._read_static_file("test_image_invert_no_dither.zpl")
+        )
+
     def test_image_to_zpl_no_dither(self):
         """Test image to ZPL without dithering the image."""
         gf_zpl = ZebrafyImage(
@@ -104,11 +253,18 @@ class TestZebrafy(unittest.TestCase):
         )
 
     def test_image_to_zpl_width_height(self):
-        """Test image to ZPL without dithering the image and high threshold."""
+        """Test image to ZPL with width and height."""
         gf_zpl = ZebrafyImage(
             self._read_static_file("test_image.png"), width=500, height=500
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_image_width_height.zpl"))
+
+    def test_image_to_zpl_pos_x_pos_y(self):
+        """Test image to ZPL with pos_x and pos_y."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), pos_x=100, pos_y=200
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_image_pos_x_pos_y.zpl"))
 
     def test_multiple_image_to_zpl(self):
         """Test multiple images to ZPL with default options."""
@@ -121,52 +277,104 @@ class TestZebrafy(unittest.TestCase):
             complete_zpl, self._read_static_file("test_image_multiple.zpl")
         )
 
-    def test_image_not_bytes_or_pil_image(self):
-        zebrafy_image = ZebrafyImage("This is not an image")
-        with self.assertRaises(ValueError):
-            zebrafy_image.to_zpl()
-
-    ####################
-    # ZPL to Image Tests
-    ####################
-    def test_gfa_zpl_to_image(self):
-        """Test ZPL GFA to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfa.zpl")).to_images()[0]
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format="PNG")
-        self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("test_image_gfa.png")
-        )
-
-    def test_gfb_zpl_to_image(self):
-        """Test ZPL GFB to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfb.zpl")).to_images()[0]
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format="PNG")
-        self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("test_image_gfb.png")
-        )
-
-    def test_gfc_zpl_to_image(self):
-        """Test ZPL GFC to image bytes."""
-        image = ZebrafyZPL(self._read_static_file("test_image_gfc.zpl")).to_images()[0]
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format="PNG")
-        self.assertEqual(
-            image_bytes.getvalue(), self._read_static_file("test_image_gfc.png")
-        )
-
-    def test_broken_zpl_gf_to_image(self):
-        """Test broken ZPL to image bytes - resulting in ValueError."""
-        zebrafy_broken_zpl = ZebrafyZPL(
-            self._read_static_file("test_image_broken.zpl"),
-        )
-        with self.assertRaises(ValueError):
-            zebrafy_broken_zpl.to_images()
-
     ##################
-    # PDF to ZPL Tests
+    # ZebrafyPDF Tests
     ##################
+    # Input validation
+    def test_zebrafy_pdf_pdf_bytes(self):
+        """Test ZebrafyImage pdf_bytes input"""
+        with self.assertRaises(ValueError):
+            ZebrafyPDF(None)
+        with self.assertRaises(TypeError):
+            ZebrafyPDF(123)
+
+    def test_zebrafy_pdf_compression_type(self):
+        """Test ZebrafyPDF compression_type input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.compression_type = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.compression_type = 123
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.compression_type = "D"
+
+    def test_zebrafy_pdf_invert(self):
+        """Test ZebrafyPDF invert input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.invert = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.invert = "123"
+
+    def test_zebrafy_pdf_dither(self):
+        """Test ZebrafyPDF dither input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.dither = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.dither = "123"
+
+    def test_zebrafy_pdf_threshold(self):
+        """Test ZebrafyPDF threshold input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.threshold = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.threshold = "123"
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.threshold = -1
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.threshold = 256
+
+    def test_zebrafy_pdf_width(self):
+        """Test ZebrafyPDF width input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.width = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.width = "123"
+
+    def test_zebrafy_pdf_height(self):
+        """Test ZebrafyPDF height input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.height = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.height = "123"
+
+    def test_zebrafy_pdf_pos_x(self):
+        """Test ZebrafyPDF pos_x input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.pos_x = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.pos_x = "123"
+
+    def test_zebrafy_pdf_pos_y(self):
+        """Test ZebrafyPDF pos_y input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.pos_y = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.pos_y = "123"
+
+    def test_zebrafy_pdf_complete_zpl(self):
+        """Test ZebrafyPDF complete_zpl input"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.complete_zpl = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.complete_zpl = "123"
+
     def test_pdf_to_default_zpl(self):
         """Test PDF to ZPL with default options."""
         default_zpl = ZebrafyPDF(self._read_static_file("test_pdf.pdf")).to_zpl()
@@ -222,8 +430,65 @@ class TestZebrafy(unittest.TestCase):
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_width_height.zpl"))
 
     ##################
-    # ZPL to PDF Tests
+    # ZebrafyZPL Tests
     ##################
+    def test_zebrafy_zpl_zpl_data(self):
+        with self.assertRaises(ValueError):
+            ZebrafyZPL(None)
+        with self.assertRaises(TypeError):
+            ZebrafyZPL(123)
+
+    def test_gfa_zpl_to_image(self):
+        """Test ZPL GFA to image bytes."""
+        image = ZebrafyZPL(self._read_static_file("test_image_gfa.zpl")).to_images()[0]
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format="PNG")
+        self.assertEqual(
+            image_bytes.getvalue(), self._read_static_file("test_image_gfa.png")
+        )
+
+    def test_gfb_zpl_to_image(self):
+        """Test ZPL GFB to image bytes."""
+        image = ZebrafyZPL(self._read_static_file("test_image_gfb.zpl")).to_images()[0]
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format="PNG")
+        self.assertEqual(
+            image_bytes.getvalue(), self._read_static_file("test_image_gfb.png")
+        )
+
+    def test_gfc_zpl_to_image(self):
+        """Test ZPL GFC to image bytes."""
+        image = ZebrafyZPL(self._read_static_file("test_image_gfc.zpl")).to_images()[0]
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format="PNG")
+        self.assertEqual(
+            image_bytes.getvalue(), self._read_static_file("test_image_gfc.png")
+        )
+
+    def test_broken_zpl_gf_to_image(self):
+        """Test broken ZPL to image bytes - resulting in ValueError."""
+        zebrafy_broken_zpl = ZebrafyZPL(
+            self._read_static_file("test_image_broken.zpl"),
+        )
+        with self.assertRaises(ValueError):
+            zebrafy_broken_zpl.to_images()
+
+    def test_broken_zpl_gfc_crc_to_image(self):
+        """Test broken ZPL gfc to image bytes - resulting in ValueError."""
+        zebrafy_broken_zpl = ZebrafyZPL(
+            self._read_static_file("test_image_gfc_broken_crc.zpl"),
+        )
+        with self.assertRaises(ValueError):
+            zebrafy_broken_zpl.to_images()
+
+    def test_broken_zpl_gfc_compression_to_image(self):
+        """Test broken ZPL gfc to image bytes - resulting in ValueError."""
+        zebrafy_broken_zpl = ZebrafyZPL(
+            self._read_static_file("test_image_gfc_broken_compression.zpl"),
+        )
+        with self.assertRaises(ValueError):
+            zebrafy_broken_zpl.to_images()
+
     def test_gfa_zpl_to_pdf(self):
         """Test ZPL GFA to PDF bytes."""
         pdf_bytes = ZebrafyZPL(self._read_static_file("test_pdf_gfa.zpl")).to_pdf()
