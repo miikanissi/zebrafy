@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "zebrafy"
 version = "1.0.0"
-description = "Python library for converting Zebra Programming Language (ZPL) to and from PDF, HTML, and images"
+description = "Python library for converting PDF and images to Zebra Programming Language (ZPL)"
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
@@ -54,6 +54,7 @@ content-type = "text/x-rst"
 
 [project.urls]
 Homepage = "https://github.com/miikanissi/zebrafy/"
+Documentation = "https://zebrafy.readthedocs.io/"
 
 [tool.setuptools]
 include-package-data = false
