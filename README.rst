@@ -4,6 +4,22 @@
 .. |zebrafy_icon_64| image:: https://raw.githubusercontent.com/miikanissi/zebrafy/master/docs/zebrafy-64.png
    :alt: Zebrafy Logo
 
+.. image:: https://github.com/miikanissi/zebrafy/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/miikanissi/zebrafy/actions/workflows/ci.yml
+    :alt: CI
+
+.. image:: https://readthedocs.org/projects/zebrafy/badge/?version=latest
+    :target: https://zebrafy.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://img.shields.io/badge/pypi-1.0.1-blue
+    :target: https://pypi.org/project/zebrafy/
+    :alt: PyPi Package
+
+.. image:: https://img.shields.io/badge/license-LGPLv3-green
+    :target: https://www.gnu.org/licenses/lgpl-3.0.en.html#license-text
+    :alt: License
+
 **Zebrafy** is a Python 3 library for converting PDF and images to and from
 `Zebra Programming Language (ZPL) <https://en.wikipedia.org/wiki/Zebra_Programming_Language>`_
 graphic fields (^GF).
