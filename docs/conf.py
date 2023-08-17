@@ -19,7 +19,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Zebrafy"
 copyright = "2023, Miika Nissi"
 author = "Miika Nissi"
-release = "0.1.0"
+version = "0.1.0"
+release = version
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -48,3 +49,8 @@ exclude_patterns = [
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+html_logo = "zebrafy-64.png"
+html_theme_options = {
+    "logo_only": False,
+    "display_version": True,
+}

@@ -1,5 +1,8 @@
-Zebrafy
-=======
+|zebrafy_icon_64| Zebrafy
+=========================
+
+.. |zebrafy_icon_64| image:: https://raw.githubusercontent.com/miikanissi/zebrafy/master/docs/zebrafy-64.png
+   :alt: Zebrafy Logo
 
 **Zebrafy** is a Python 3 library for converting PDF and images to and from
 `Zebra Programming Language (ZPL) <https://en.wikipedia.org/wiki/Zebra_Programming_Language>`_
@@ -48,7 +51,7 @@ Installation
 
 .. code-block:: console
 
-  (.venv) $ pip install zebrafy
+  pip install zebrafy
 
 
 Dependencies
@@ -182,7 +185,26 @@ Convert all graphic fields from a valid ZPL file to PDF bytes and save to PDF fi
       pdf.write(pdf_bytes)
 
 
+Contributing and Issues
+-----------------------
+
+Contributions and bug reports are welcome and can be submitted on the
+`GitHub page <https://github.com/miikanissi/zebrafy>`_.
+
+The project does not yet have a well-defined scope, and I'm open to new feature
+requests. Features currently in consideration are:
+
+- HTML to ZPL conversion by implementing standard HTML elements into ZPL commands
+- Extract text from a PDF to render it as a native ZPL command instead of graphic field
+
 License
 -------
 
-This source is released under the `GNU Lesser General Public License v3.0 <https://www.gnu.org/licenses/lgpl-3.0.en.html#license-text>`_.
+This source is released under the
+`GNU Lesser General Public License v3.0 <https://www.gnu.org/licenses/lgpl-3.0.en.html#license-text>`_.
+
+Logo
+----
+
+.. image:: https://raw.githubusercontent.com/miikanissi/zebrafy/master/docs/zebrafy-long.png
+   :alt: Zebrafy Logo
