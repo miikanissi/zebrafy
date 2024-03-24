@@ -38,19 +38,34 @@ class GraphicField:
     Converts a PIL image to Zebra Programming Language (ZPL) graphic field data.
 
     :param PIL.Image.Image image: An instance of a PIL Image.
-    :param compression_type: ZPL compression type parameter that accepts the \
-    following values, defaults to ``"A"``:
+    :param compression_type (deprecated): ZPL compression type parameter that accepts \
+    the following values, defaults to ``"A"``:
 
         - ``"A"``: ASCII hexadecimal - most compatible (default)
         - ``"B"``: Base64 binary
         - ``"C"``: LZ77 / Zlib compressed base64 binary - best compression
+    :param format: ZPL format parameter that accepts the following values, \
+    defaults to ``"ASCII"``:
+
+        - ``"ASCII"``: ASCII hexadecimal - most compatible (default)
+        - ``"B64"``: Base64 binary
+        - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
+
+    .. deprecated:: 1.1.0
+        The `compression_type` parameter is deprecated in favor of `format` and will \
+        be removed in version 2.0.0.
     """
 
-    def __init__(self, pil_image: Image, compression_type: str = None):
+    def __init__(
+        self, pil_image: Image, compression_type: str = None, format: str = None
+    ):
         self.pil_image = pil_image
-        if compression_type is None:
-            compression_type = "a"
-        self.compression_type = compression_type.upper()
+        if format is None:
+            if compression_type is None:
+                format = "ASCII"
+            else:
+                format = self._compression_type_to_format(compression_type)
+        self.format = format.upper()
 
     pil_image = property(operator.attrgetter("_pil_image"))
 
@@ -65,24 +80,35 @@ class GraphicField:
             )
         self._pil_image = i
 
-    compression_type = property(operator.attrgetter("_compression_type"))
+    format = property(operator.attrgetter("_format"))
 
-    @compression_type.setter
-    def compression_type(self, c):
-        if c is None:
-            raise ValueError("Compression type cannot be empty.")
-        if not isinstance(c, str):
+    @format.setter
+    def format(self, f):
+        if f is None:
+            raise ValueError("Format cannot be empty.")
+        if not isinstance(f, str):
             raise TypeError(
-                "Compression type must be a valid string. {param_type} was given."
-                .format(param_type=type(c))
-            )
-        if c not in ["A", "B", "C"]:
-            raise ValueError(
-                'Compression type must be "A","B", or "C". {param} was given.'.format(
-                    param=c
+                "Format must be a valid string. {param_type} was given.".format(
+                    param_type=type(f)
                 )
             )
-        self._compression_type = c
+        if f not in ["ASCII", "B64", "Z64"]:
+            raise ValueError(
+                'Format type must be "ASCII","B64", or "Z64". {param} was given.'
+                .format(param=f)
+            )
+        self._format = f
+
+    def _compression_type_to_format(self, compression_type: str) -> str:
+        """
+        Convert deprecated compression type to format.
+        """
+        if compression_type.upper() == "A":
+            return "ASCII"
+        elif compression_type.upper() == "B":
+            return "B64"
+        elif compression_type.upper() == "C":
+            return "Z64"
 
     def _get_binary_byte_count(self) -> int:
         """
@@ -120,28 +146,28 @@ class GraphicField:
 
     def _get_data_string(self) -> str:
         """
-        Get graphic field data string depending on compression type.
+        Get graphic field data string depending on format.
 
-        :returns: Graphic field data string depending on compression type.
+        :returns: Graphic field data string depending on format.
         """
         image_bytes = self._pil_image.tobytes()
         data_string = ""
 
-        # Compression type A: Convert bytes to ASCII hexadecimal
-        if self._compression_type == "A":
+        # Format ASCII: Convert bytes to ASCII hexadecimal
+        if self._format == "ASCII":
             data_string = image_bytes.hex()
 
-        # Compression type B: Convert bytes to base64 and add header + CRC
-        elif self._compression_type == "B":
+        # Format B64: Convert bytes to base64 and add header + CRC
+        elif self._format == "B64":
             b64_bytes = base64.b64encode(image_bytes)
             data_string = ":B64:{encoded_data}:{crc}".format(
                 encoded_data=b64_bytes.decode("ascii"),
                 crc=CRC(b64_bytes).get_crc_hex_string(),
             )
 
-        # Compression type C: Convert LZ77/ Zlib compressed bytes to base64 and add
+        # Format Z64: Convert LZ77/ Zlib compressed bytes to base64 and add
         # header + CRC
-        elif self._compression_type == "C":
+        elif self._format == "Z64":
             z64_bytes = base64.b64encode(zlib.compress(image_bytes))
             data_string = ":Z64:{encoded_data}:{crc}".format(
                 encoded_data=z64_bytes.decode("ascii"),
@@ -156,8 +182,7 @@ class GraphicField:
 
         :returns: Complete graphic field string for ZPL.
         """
-        return "^GF{comp_type},{bb_count},{gf_count},{bpr},{data}^FS".format(
-            comp_type=self._compression_type,
+        return "^GFA,{bb_count},{gf_count},{bpr},{data}^FS".format(
             bb_count=self._get_binary_byte_count(),
             gf_count=self._get_graphic_field_count(),
             bpr=self._get_bytes_per_row(),
