@@ -36,12 +36,18 @@ class ZebrafyPDF:
     Provides a method for converting PDFs to Zebra Programming Language (ZPL).
 
     :param pdf_bytes: PDF as a bytes object.
-    :param compression_type: ZPL compression type parameter that accepts the \
-    following values, defaults to ``"A"``:
+    :param compression_type (deprecated): ZPL compression type parameter that accepts \
+    the following values, defaults to ``"A"``:
 
         - ``"A"``: ASCII hexadecimal - most compatible (default)
         - ``"B"``: Base64 binary
         - ``"C"``: LZ77 / Zlib compressed base64 binary - best compression
+    :param format: ZPL format parameter that accepts the following values, \
+    defaults to ``"ASCII"``:
+
+        - ``"ASCII"``: ASCII hexadecimal - most compatible (default)
+        - ``"B64"``: Base64 binary
+        - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
     :param invert: Invert the black and white in resulting image, defaults to ``False``
     :param dither: Dither the pixels instead of hard limit on black and white, \
     defaults to ``False``
@@ -55,12 +61,17 @@ class ZebrafyPDF:
     :param pos_y: Y position of the PDF on the resulting ZPL, defaults to ``0``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field, defaults to ``True``
+
+    .. deprecated:: 1.1.0
+        The `compression_type` parameter is deprecated in favor of `format` and will \
+        be removed in version 2.0.0.
     """
 
     def __init__(
         self,
         pdf_bytes: bytes,
         compression_type: str = None,
+        format: str = None,
         invert: bool = None,
         dither: bool = None,
         threshold: int = None,
@@ -71,9 +82,12 @@ class ZebrafyPDF:
         complete_zpl: bool = None,
     ):
         self.pdf_bytes = pdf_bytes
-        if compression_type is None:
-            compression_type = "a"
-        self.compression_type = compression_type.upper()
+        if format is None:
+            if compression_type is None:
+                format = "ASCII"
+            else:
+                format = self._compression_type_to_format(compression_type)
+        self.format = format.upper()
         if invert is None:
             invert = False
         self.invert = invert
@@ -113,24 +127,25 @@ class ZebrafyPDF:
             )
         self._pdf_bytes = p
 
-    compression_type = property(operator.attrgetter("_compression_type"))
+    format = property(operator.attrgetter("_format"))
 
-    @compression_type.setter
-    def compression_type(self, c):
-        if c is None:
-            raise ValueError("Compression type cannot be empty.")
-        if not isinstance(c, str):
+    @format.setter
+    def format(self, f):
+        if f is None:
+            raise ValueError("Format cannot be empty.")
+        if not isinstance(f, str):
             raise TypeError(
-                "Compression type must be a valid string. {param_type} was given."
-                .format(param_type=type(c))
-            )
-        if c not in ["A", "B", "C"]:
-            raise ValueError(
-                'Compression type must be "A","B", or "C". {param} was given.'.format(
-                    param=c
+                "Format must be a valid string. {param_type} was given.".format(
+                    param_type=type(f)
                 )
             )
-        self._compression_type = c
+        if f not in ["ASCII", "B64", "Z64"]:
+            raise ValueError(
+                'Format must be "ASCII", "B64", or "Z64". {param} was given.'.format(
+                    param=f
+                )
+            )
+        self._format = f
 
     invert = property(operator.attrgetter("_invert"))
 
@@ -248,6 +263,17 @@ class ZebrafyPDF:
             )
         self._complete_zpl = c
 
+    def _compression_type_to_format(self, compression_type: str) -> str:
+        """
+        Convert deprecated compression type to format.
+        """
+        if compression_type.upper() == "A":
+            return "ASCII"
+        elif compression_type.upper() == "B":
+            return "B64"
+        elif compression_type.upper() == "C":
+            return "Z64"
+
     def to_zpl(self) -> str:
         """
         Converts PDF bytes to Zebra Programming Language (ZPL).
@@ -263,7 +289,7 @@ class ZebrafyPDF:
             pil_image = bitmap.to_pil()
             zebrafy_image = ZebrafyImage(
                 pil_image,
-                compression_type=self._compression_type,
+                format=self._format,
                 invert=self._invert,
                 dither=self._dither,
                 threshold=self._threshold,

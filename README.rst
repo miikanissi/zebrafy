@@ -12,7 +12,7 @@
     :target: https://zebrafy.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/pypi-1.0.1-blue
+.. image:: https://img.shields.io/badge/pypi-1.1.0-blue
     :target: https://pypi.org/project/zebrafy/
     :alt: PyPi Package
 
@@ -36,11 +36,11 @@ If you want more control over the resulting ZPL data, **ZebrafyImage** and
 +----------------------+--------------------------------------------------------------------------------------------------------------+
 | Parameter            | Description                                                                                                  |
 +======================+==============================================================================================================+
-| ``compression_type`` | ZPL graphic field compression type (default ``"A"``)                                                         |
+| ``format``           | ZPL graphic field format type (default ``"ASCII"``)                                                          |
 |                      |                                                                                                              |
-|                      | - ``"A"`` — ASCII hexadecimal (most compatible)                                                              |
-|                      | - ``"B"`` — Base64 Binary                                                                                    |
-|                      | - ``"C"`` — Z64 compressed binary (best compression)                                                         |
+|                      | - ``"ASCII"`` — ASCII hexadecimal (most compatible)                                                          |
+|                      | - ``"B64"`` — Base64 Binary                                                                                  |
+|                      | - ``"Z64"`` — Z64 compressed binary (best compression)                                                       |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
 | ``invert``           | Invert the black and white in the image/PDF output. (``True`` or ``False``, default ``False``)               |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
@@ -106,7 +106,7 @@ Example usage with optional parameters:
   with open("source.png", "rb") as image:
       zpl_string = ZebrafyImage(
           image.read(),
-          compression_type="C",
+          format="Z64",
           invert=True,
           dither=False,
           threshold=128,
@@ -160,7 +160,7 @@ conversion:
   with open("source.pdf", "rb") as pdf:
       zpl_string = ZebrafyPDF(
           pdf.read(),
-          compression_type="C",
+          format="Z64",
           invert=True,
           dither=False,
           threshold=128,

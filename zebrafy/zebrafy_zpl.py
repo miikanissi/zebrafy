@@ -103,10 +103,14 @@ class ZebrafyZPL:
             compression_type = match[0].upper()
             data_bytes = match[4]
 
-            # Compression types B and C have base64 encoded data
-            if (compression_type == "C" and data_bytes.startswith(":Z64")) or (
-                compression_type == "B" and data_bytes.startswith(":B64")
-            ):
+            if compression_type != "A":
+                raise ValueError(
+                    "No valid compression type found in ZPL graphic field (^GF). Only"
+                    " ASCII is supported (^GFA)."
+                )
+
+            if data_bytes.startswith(":Z64") or data_bytes.startswith(":B64"):
+                zlib_compressed = True if data_bytes.startswith(":Z64") else False
                 crc = data_bytes[-4:]
                 data_bytes = data_bytes[5:-5]
 
@@ -116,18 +120,12 @@ class ZebrafyZPL:
 
                 data_bytes = base64.b64decode(data_bytes)
 
-                # Compression type C: decompress LZ77 / Zlib compression
-                if compression_type == "C":
+                # Decompress LZ77 / Zlib compression
+                if zlib_compressed:
                     data_bytes = zlib.decompress(data_bytes)
 
-            # Compression type A contains ASCII hexadecimal data
-            elif compression_type == "A":
-                data_bytes = bytes.fromhex(data_bytes)
-
             else:
-                raise ValueError(
-                    "No valid compression type found in ZPL graphic field (^GF)."
-                )
+                data_bytes = bytes.fromhex(data_bytes)
 
             pil_image = Image.frombytes("1", (width, height), data_bytes)
             pil_images.append(pil_image)
