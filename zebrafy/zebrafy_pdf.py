@@ -320,11 +320,10 @@ class ZebrafyPDF:
                 pos_y=self._pos_y,
                 complete_zpl=False,
             )
-            #graphic_fields += zebrafy_image.to_zpl() + "\n"
 
             page_zpl = zebrafy_image.to_zpl() + "\n"
 
-            if self._complete_zpl and self.split_page:
+            if self._complete_zpl and self._split_pages:
                 graphic_fields += "^XA\n" + page_zpl + "^XZ\n"
             else:
                 graphic_fields += page_zpl
