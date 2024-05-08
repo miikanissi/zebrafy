@@ -80,6 +80,7 @@ class ZebrafyPDF:
         pos_x: int = None,
         pos_y: int = None,
         complete_zpl: bool = None,
+        split_pages : bool = None,
     ):
         self.pdf_bytes = pdf_bytes
         if format is None:
@@ -112,6 +113,9 @@ class ZebrafyPDF:
         if complete_zpl is None:
             complete_zpl = True
         self.complete_zpl = complete_zpl
+        if split_pages is None:
+            split_pages = False
+        self.split_pages = split_pages
 
     pdf_bytes = property(operator.attrgetter("_pdf_bytes"))
 
@@ -263,6 +267,23 @@ class ZebrafyPDF:
             )
         self._complete_zpl = c
 
+    split_pages = property(operator.attrgetter("_split_pages"))
+
+    @split_pages.setter
+    def split_pages(self, s):
+        if s is None:
+            raise ValueError("Split_pages cannot be empty.")
+        if not isinstance(s, bool):
+            raise TypeError(
+                "Invert must be a boolean. {param_type} was given.".format(
+                    param_type=type(s)
+                )
+            )
+        self._split_pages = s
+        
+
+
+
     def _compression_type_to_format(self, compression_type: str) -> str:
         """
         Convert deprecated compression type to format.
@@ -299,9 +320,15 @@ class ZebrafyPDF:
                 pos_y=self._pos_y,
                 complete_zpl=False,
             )
-            graphic_fields += zebrafy_image.to_zpl() + "\n"
+            #graphic_fields += zebrafy_image.to_zpl() + "\n"
 
-        if self._complete_zpl:
+            page_zpl = zebrafy_image.to_zpl() + "\n"
+
+            if self._complete_zpl and self.split_page:
+                graphic_fields += "^XA\n" + page_zpl + "^XZ\n"
+            else:
+                graphic_fields += page_zpl
+
+        if self._complete_zpl and not self._split_pages:
             return "^XA\n" + graphic_fields + "^XZ\n"
-
         return graphic_fields
