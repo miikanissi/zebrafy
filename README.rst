@@ -12,7 +12,7 @@
     :target: https://zebrafy.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/pypi-1.1.0-blue
+.. image:: https://img.shields.io/badge/pypi-1.1.1-blue
     :target: https://pypi.org/project/zebrafy/
     :alt: PyPi Package
 
