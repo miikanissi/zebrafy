@@ -59,6 +59,14 @@ If you want more control over the resulting ZPL data, **ZebrafyImage** and
 | ``complete_zpl``     | Add ZPL header and footer or only get the ZPL graphic field output (``True`` or ``False``, default ``True``) |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
 
+Additionally, **ZebrafyPDF** supports the following optional parameters:
+
++----------------------+--------------------------------------------------------------------------------------------------------------+
+| Parameter            | Description                                                                                                  |
++======================+==============================================================================================================+
+| ``split_pages``      | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)              |
++----------------------+--------------------------------------------------------------------------------------------------------------+
+
 Getting Started
 ---------------
 
