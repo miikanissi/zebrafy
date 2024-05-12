@@ -402,6 +402,15 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(TypeError):
             zebrafy_pdf.complete_zpl = "123"
 
+    def test_zebrafy_pdf_split_pages(self):
+        """Test ZebrafyPDF split pages"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.split_pages = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.split_pages = "123"
+
     def test_pdf_to_default_zpl(self):
         """Test PDF to ZPL with default options."""
         default_zpl = ZebrafyPDF(self._read_static_file("test_pdf.pdf")).to_zpl()
@@ -450,11 +459,18 @@ class TestZebrafy(unittest.TestCase):
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_high_threshold.zpl"))
 
     def test_pdf_to_zpl_width_height(self):
-        """Test PDF to ZPL without dithering the PDF and high threshold."""
+        """Test PDF to ZPL with set width and height."""
         gf_zpl = ZebrafyPDF(
             self._read_static_file("test_pdf.pdf"), width=720, height=1280
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_width_height.zpl"))
+
+    def test_pdf_to_zpl_split_pages(self):
+        """Test PDF to ZPL with split pages."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), split_pages=True
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_split_pages.zpl"))
 
     ##################
     # ZebrafyZPL Tests

@@ -59,6 +59,8 @@ class ZebrafyPDF:
     PDF height, defaults to ``0``
     :param pos_x: X position of the PDF on the resulting ZPL, defaults to ``0``
     :param pos_y: Y position of the PDF on the resulting ZPL, defaults to ``0``
+    :param split_pages: Split each PDF page as a new ZPL label  \
+    (only applies if complete_zpl is set), defaults to ``False``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field, defaults to ``True``
 
@@ -79,8 +81,8 @@ class ZebrafyPDF:
         height: int = None,
         pos_x: int = None,
         pos_y: int = None,
+        split_pages: bool = None,
         complete_zpl: bool = None,
-        split_pages : bool = None,
     ):
         self.pdf_bytes = pdf_bytes
         if format is None:
@@ -110,12 +112,12 @@ class ZebrafyPDF:
         if pos_y is None:
             pos_y = 0
         self.pos_y = pos_y
-        if complete_zpl is None:
-            complete_zpl = True
-        self.complete_zpl = complete_zpl
         if split_pages is None:
             split_pages = False
         self.split_pages = split_pages
+        if complete_zpl is None:
+            complete_zpl = True
+        self.complete_zpl = complete_zpl
 
     pdf_bytes = property(operator.attrgetter("_pdf_bytes"))
 
@@ -253,6 +255,20 @@ class ZebrafyPDF:
             )
         self._pos_y = y
 
+    split_pages = property(operator.attrgetter("_split_pages"))
+
+    @split_pages.setter
+    def split_pages(self, s):
+        if s is None:
+            raise ValueError("Split pages cannot be empty.")
+        if not isinstance(s, bool):
+            raise TypeError(
+                "Split pages must be a boolean. {param_type} was given.".format(
+                    param_type=type(s)
+                )
+            )
+        self._split_pages = s
+
     complete_zpl = property(operator.attrgetter("_complete_zpl"))
 
     @complete_zpl.setter
@@ -266,23 +282,6 @@ class ZebrafyPDF:
                 )
             )
         self._complete_zpl = c
-
-    split_pages = property(operator.attrgetter("_split_pages"))
-
-    @split_pages.setter
-    def split_pages(self, s):
-        if s is None:
-            raise ValueError("Split_pages cannot be empty.")
-        if not isinstance(s, bool):
-            raise TypeError(
-                "Invert must be a boolean. {param_type} was given.".format(
-                    param_type=type(s)
-                )
-            )
-        self._split_pages = s
-        
-
-
 
     def _compression_type_to_format(self, compression_type: str) -> str:
         """
@@ -304,7 +303,7 @@ class ZebrafyPDF:
         """
         # Open and convert image to grayscale
         pdf = PdfDocument(self._pdf_bytes)
-        graphic_fields = ""
+        graphic_fields = []
         for page in pdf:
             bitmap = page.render(scale=1, rotation=0)
             pil_image = bitmap.to_pil()
@@ -323,11 +322,16 @@ class ZebrafyPDF:
 
             page_zpl = zebrafy_image.to_zpl() + "\n"
 
-            if self._complete_zpl and self._split_pages:
-                graphic_fields += "^XA\n" + page_zpl + "^XZ\n"
-            else:
-                graphic_fields += page_zpl
+            graphic_fields.append(page_zpl)
 
-        if self._complete_zpl and not self._split_pages:
-            return "^XA\n" + graphic_fields + "^XZ\n"
-        return graphic_fields
+        zpl_string = ""
+        if self._complete_zpl:
+            if self._split_pages:
+                for graphic_field in graphic_fields:
+                    zpl_string += "^XA\n" + graphic_field + "^XZ\n"
+            else:
+                zpl_string = "^XA\n" + "".join(graphic_fields) + "^XZ\n"
+        else:
+            zpl_string = "".join(graphic_fields)
+
+        return zpl_string
