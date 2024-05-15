@@ -62,6 +62,7 @@ class ZebrafyPDF:
     :param split_pages: Split each PDF page as a new ZPL label  \
     (only applies if complete_zpl is set), defaults to ``False``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
+    :param rotation: Additional rotation in degrees ``0, 90, 180, or 270)`` \
     Otherwise return only the graphic field, defaults to ``True``
 
     .. deprecated:: 1.1.0
@@ -83,6 +84,7 @@ class ZebrafyPDF:
         pos_y: int = None,
         split_pages: bool = None,
         complete_zpl: bool = None,
+        rotation: int = None,
     ):
         self.pdf_bytes = pdf_bytes
         if format is None:
@@ -118,6 +120,9 @@ class ZebrafyPDF:
         if complete_zpl is None:
             complete_zpl = True
         self.complete_zpl = complete_zpl
+        if rotation is None:
+            rotation = 0
+        self.rotation = rotation
 
     pdf_bytes = property(operator.attrgetter("_pdf_bytes"))
 
@@ -283,6 +288,26 @@ class ZebrafyPDF:
             )
         self._complete_zpl = c
 
+    rotation = property(operator.attrgetter("_rotation"))
+
+    @rotation.setter
+    def rotation(self, r):
+        if r is None:
+            raise ValueError("Rotation cannot be empty.")
+        if not isinstance(r, int):
+            raise TypeError(
+                "Rotation must be an integer. {param_type} was given.".format(
+                    param_type=type(r)
+                )
+            )
+        if r not in [0, 90, 180, 270]:
+            raise ValueError(
+                'Rotation must be "0", "90", "180" or "270". {param} was given.'.format(
+                    param=r
+                )
+            )
+        self._rotation = r
+
     def _compression_type_to_format(self, compression_type: str) -> str:
         """
         Convert deprecated compression type to format.
@@ -305,7 +330,7 @@ class ZebrafyPDF:
         pdf = PdfDocument(self._pdf_bytes)
         graphic_fields = []
         for page in pdf:
-            bitmap = page.render(scale=1, rotation=0)
+            bitmap = page.render(scale=1, rotation=self._rotation)
             pil_image = bitmap.to_pil()
             zebrafy_image = ZebrafyImage(
                 pil_image,
