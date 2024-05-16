@@ -56,6 +56,8 @@ If you want more control over the resulting ZPL data, **ZebrafyImage** and
 +----------------------+--------------------------------------------------------------------------------------------------------------+
 | ``pos_y``            | Pixel y position of the graphic field in resulting ZPL (default ``0``)                                       |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``rotation``         | Rotates the image by the specified degree (``0``, ``90``, ``180`` or ``270``, default ``0``)                 |
++----------------------+--------------------------------------------------------------------------------------------------------------+
 | ``complete_zpl``     | Add ZPL header and footer or only get the ZPL graphic field output (``True`` or ``False``, default ``True``) |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
 
@@ -66,9 +68,6 @@ Additionally, **ZebrafyPDF** supports the following optional parameters:
 +======================+==============================================================================================================+
 | ``split_pages``      | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)              |
 +----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``rotation``         | Rotates the PDF by the specified degree (``0``, ``90``, ``180`` or ``270``, default ``0``)                   |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-
 
 
 Getting Started
@@ -126,6 +125,7 @@ Example usage with optional parameters:
           height=1280,
           pos_x=100,
           pos_y=100,
+          rotation=90,
           complete_zpl=True,
       ).to_zpl()
 
@@ -163,7 +163,7 @@ Convert PDF bytes into a complete ZPL string and save to file:
       zpl.write(zpl_string)
 
 **ZebrafyPDF** conversion supports the same optional parameters as **ZebrafyImage**
-conversion:
+conversion, with the addition of the ``split_pages`` parameter to split the PDF pages:
 
 .. code-block:: python
 
@@ -180,7 +180,9 @@ conversion:
           height=1280,
           pos_x=100,
           pos_y=100,
+          rotation=90,
           complete_zpl=True,
+          split_pages=True,
       ).to_zpl()
 
   with open("output.zpl", "w") as zpl:

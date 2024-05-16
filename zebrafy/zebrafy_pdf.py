@@ -59,10 +59,11 @@ class ZebrafyPDF:
     PDF height, defaults to ``0``
     :param pos_x: X position of the PDF on the resulting ZPL, defaults to ``0``
     :param pos_y: Y position of the PDF on the resulting ZPL, defaults to ``0``
+    :param rotation: Additional rotation in degrees ``0``, ``90``, ``180``, or \
+    ``270``, defaults to ``0``
     :param split_pages: Split each PDF page as a new ZPL label  \
     (only applies if complete_zpl is set), defaults to ``False``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
-    :param rotation: Additional rotation in degrees ``0, 90, 180, or 270)`` \
     Otherwise return only the graphic field, defaults to ``True``
 
     .. deprecated:: 1.1.0
@@ -82,9 +83,9 @@ class ZebrafyPDF:
         height: int = None,
         pos_x: int = None,
         pos_y: int = None,
+        rotation: int = None,
         split_pages: bool = None,
         complete_zpl: bool = None,
-        rotation: int = None,
     ):
         self.pdf_bytes = pdf_bytes
         if format is None:
@@ -114,15 +115,15 @@ class ZebrafyPDF:
         if pos_y is None:
             pos_y = 0
         self.pos_y = pos_y
+        if rotation is None:
+            rotation = 0
+        self.rotation = rotation
         if split_pages is None:
             split_pages = False
         self.split_pages = split_pages
         if complete_zpl is None:
             complete_zpl = True
         self.complete_zpl = complete_zpl
-        if rotation is None:
-            rotation = 0
-        self.rotation = rotation
 
     pdf_bytes = property(operator.attrgetter("_pdf_bytes"))
 
@@ -260,6 +261,26 @@ class ZebrafyPDF:
             )
         self._pos_y = y
 
+    rotation = property(operator.attrgetter("_rotation"))
+
+    @rotation.setter
+    def rotation(self, r):
+        if r is None:
+            raise ValueError("Rotation cannot be empty.")
+        if not isinstance(r, int):
+            raise TypeError(
+                "Rotation must be an integer. {param_type} was given.".format(
+                    param_type=type(r)
+                )
+            )
+        if r not in [0, 90, 180, 270]:
+            raise ValueError(
+                'Rotation must be "0", "90", "180" or "270". {param} was given.'.format(
+                    param=r
+                )
+            )
+        self._rotation = r
+
     split_pages = property(operator.attrgetter("_split_pages"))
 
     @split_pages.setter
@@ -287,26 +308,6 @@ class ZebrafyPDF:
                 )
             )
         self._complete_zpl = c
-
-    rotation = property(operator.attrgetter("_rotation"))
-
-    @rotation.setter
-    def rotation(self, r):
-        if r is None:
-            raise ValueError("Rotation cannot be empty.")
-        if not isinstance(r, int):
-            raise TypeError(
-                "Rotation must be an integer. {param_type} was given.".format(
-                    param_type=type(r)
-                )
-            )
-        if r not in [0, 90, 180, 270]:
-            raise ValueError(
-                'Rotation must be "0", "90", "180" or "270". {param} was given.'.format(
-                    param=r
-                )
-            )
-        self._rotation = r
 
     def _compression_type_to_format(self, compression_type: str) -> str:
         """
@@ -342,6 +343,7 @@ class ZebrafyPDF:
                 height=self._height,
                 pos_x=self._pos_x,
                 pos_y=self._pos_y,
+                rotation=0,  # Rotation is already handled in the PDF rendering
                 complete_zpl=False,
             )
 
