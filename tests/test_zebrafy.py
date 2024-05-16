@@ -51,7 +51,7 @@ class TestZebrafy(unittest.TestCase):
 
     def test_version(self):
         """Test package version."""
-        self.assertEqual(__version__, "1.1.1")
+        self.assertEqual(__version__, "1.1.2")
 
     ###########
     # CRC Tests

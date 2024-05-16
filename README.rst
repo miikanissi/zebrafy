@@ -12,9 +12,9 @@
     :target: https://zebrafy.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/pypi-1.1.1-blue
-    :target: https://pypi.org/project/zebrafy/
-    :alt: PyPi Package
+.. image:: https://img.shields.io/pypi/v/zebrafy
+    :target: https://pypi.org/project/zebrafy
+    :alt: Zebrafy PyPi Package
 
 .. image:: https://img.shields.io/badge/license-LGPLv3-green
     :target: https://www.gnu.org/licenses/lgpl-3.0.en.html#license-text
