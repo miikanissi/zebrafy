@@ -195,6 +195,19 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(TypeError):
             zebrafy_image.pos_y = "123"
 
+    def test_zebrafy_image_rotation(self):
+        """Test ZebrafyImage rotation input"""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(ValueError):
+            zebrafy_image.rotation = None
+        with self.assertRaises(TypeError):
+            zebrafy_image.rotation = "123"
+        with self.assertRaises(TypeError):
+            zebrafy_image.rotation = 90.0
+        with self.assertRaises(ValueError):
+            zebrafy_image.rotation = 45
+
     def test_zebrafy_image_complete_zpl(self):
         """Test ZebrafyImage complete_zpl input"""
         im = Image.new(mode="RGB", size=(200, 200))
@@ -283,6 +296,13 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_image.png"), pos_x=100, pos_y=200
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_image_pos_x_pos_y.zpl"))
+
+    def test_image_to_zpl_rotation(self):
+        """Test image to ZPL with rotation."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), rotation=90
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_image_rotation.zpl"))
 
     def test_multiple_image_to_zpl(self):
         """Test multiple images to ZPL with default options."""
@@ -393,6 +413,19 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(TypeError):
             zebrafy_pdf.pos_y = "123"
 
+    def test_zebrafy_pdf_rotation(self):
+        """Test ZebrafyPDF rotation"""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.rotation = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.rotation = "123"
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.rotation = 90.0
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.rotation = 45
+
     def test_zebrafy_pdf_complete_zpl(self):
         """Test ZebrafyPDF complete_zpl input"""
         pdf = self._read_static_file("test_pdf.pdf")
@@ -464,6 +497,13 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_pdf.pdf"), width=720, height=1280
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_width_height.zpl"))
+
+    def test_pdf_to_zpl_rotation(self):
+        """Test PDF to ZPL with rotation."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), rotation=90
+        ).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_rotation.zpl"))
 
     def test_pdf_to_zpl_split_pages(self):
         """Test PDF to ZPL with split pages."""

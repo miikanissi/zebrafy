@@ -62,6 +62,8 @@ class ZebrafyImage:
     image height, defaults to ``0``
     :param pos_x: X position of the image on the resulting ZPL, defaults to ``0``
     :param pos_y: Y position of the image on the resulting ZPL, defaults to ``0``
+    :param rotation: Additional rotation in degrees ``0``, ``90``, ``180``, or \
+    ``270``, defaults to ``0``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field, defaults to ``True``
 
@@ -82,6 +84,7 @@ class ZebrafyImage:
         height: int = None,
         pos_x: int = None,
         pos_y: int = None,
+        rotation: int = None,
         complete_zpl: bool = None,
     ):
         self.image = image
@@ -112,6 +115,9 @@ class ZebrafyImage:
         if pos_y is None:
             pos_y = 0
         self.pos_y = pos_y
+        if rotation is None:
+            rotation = 0
+        self.rotation = rotation
         if complete_zpl is None:
             complete_zpl = True
         self.complete_zpl = complete_zpl
@@ -251,6 +257,26 @@ class ZebrafyImage:
             )
         self._pos_y = y
 
+    rotation = property(operator.attrgetter("_rotation"))
+
+    @rotation.setter
+    def rotation(self, r):
+        if r is None:
+            raise ValueError("Rotation cannot be empty.")
+        if not isinstance(r, int):
+            raise TypeError(
+                "Rotation must be an integer. {param_type} was given.".format(
+                    param_type=type(r)
+                )
+            )
+        if r not in [0, 90, 180, 270]:
+            raise ValueError(
+                'Rotation must be "0", "90", "180" or "270". {param} was given.'.format(
+                    param=r
+                )
+            )
+        self._rotation = r
+
     complete_zpl = property(operator.attrgetter("_complete_zpl"))
 
     @complete_zpl.setter
@@ -287,6 +313,10 @@ class ZebrafyImage:
             pil_image = Image.open(BytesIO(self._image))
         else:
             pil_image = self._image
+
+        # Rotate image based on given parameters
+        if self._rotation:
+            pil_image = pil_image.rotate(self._rotation, expand=False)
 
         # Resize image if width or height defined in parameters
         if self._width or self._height:
