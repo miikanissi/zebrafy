@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Zebrafy"
 copyright = "2023, Miika Nissi"
 author = "Miika Nissi"
-version = "1.1.2"
+version = "1.1.3"
 release = version
 
 # -- General configuration ---------------------------------------------------

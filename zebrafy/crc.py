@@ -54,8 +54,7 @@ class CRC:
             raise ValueError("Bytes data cannot be empty.")
         if not isinstance(d, bytes):
             raise TypeError(
-                "Bytes data must be a valid bytes object. {param_type} was given."
-                .format(param_type=type(d))
+                f"Bytes data must be a valid bytes object. {type(d)} was given."
             )
         self._data_bytes = d
 
@@ -66,11 +65,7 @@ class CRC:
         if p is None:
             raise ValueError("Polynomial cannot be empty.")
         if not isinstance(p, int):
-            raise TypeError(
-                "Polynomial must be a valid integer. {param_type} was given.".format(
-                    param_type=type(p)
-                )
-            )
+            raise TypeError(f"Polynomial must be a valid integer. {type(p)} was given.")
         self._poly = p
 
     def _get_crc16_ccitt(self) -> int:
@@ -100,4 +95,4 @@ class CRC:
 
         :returns: CRC-16-CCITT as four digit zero padding hexadecimal string
         """
-        return "%04X" % self._get_crc16_ccitt()
+        return f"{self._get_crc16_ccitt():04X}"

@@ -75,8 +75,7 @@ class GraphicField:
             raise ValueError("Image cannot be empty.")
         if not isinstance(i, Image):
             raise TypeError(
-                "Image must be a valid PIL.Image.Image object. {param_type} was given."
-                .format(param_type=type(i))
+                f"Image must be a valid PIL.Image.Image object. {type(i)} was given."
             )
         self._pil_image = i
 
@@ -87,22 +86,15 @@ class GraphicField:
         if f is None:
             raise ValueError("Format cannot be empty.")
         if not isinstance(f, str):
-            raise TypeError(
-                "Format must be a valid string. {param_type} was given.".format(
-                    param_type=type(f)
-                )
-            )
+            raise TypeError(f"Format must be a valid string. {type(f)} was given.")
         if f not in ["ASCII", "B64", "Z64"]:
             raise ValueError(
-                'Format type must be "ASCII","B64", or "Z64". {param} was given.'
-                .format(param=f)
+                f'Format type must be "ASCII","B64", or "Z64". {f} was given.'
             )
         self._format = f
 
     def _compression_type_to_format(self, compression_type: str) -> str:
-        """
-        Convert deprecated compression type to format.
-        """
+        """Convert deprecated compression type to format."""
         if compression_type.upper() == "A":
             return "ASCII"
         elif compression_type.upper() == "B":
@@ -182,9 +174,4 @@ class GraphicField:
 
         :returns: Complete graphic field string for ZPL.
         """
-        return "^GFA,{bb_count},{gf_count},{bpr},{data}^FS".format(
-            bb_count=self._get_binary_byte_count(),
-            gf_count=self._get_graphic_field_count(),
-            bpr=self._get_bytes_per_row(),
-            data=self._get_data_string(),
-        )
+        return f"^GFA,{self._get_binary_byte_count()},{self._get_graphic_field_count()},{self._get_bytes_per_row()},{self._get_data_string()}^FS"

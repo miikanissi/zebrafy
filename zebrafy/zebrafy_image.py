@@ -35,8 +35,7 @@ from .graphic_field import GraphicField
 
 class ZebrafyImage:
     """
-    Provides a method for converting PIL Image or image bytes to Zebra Programming \
-    Language (ZPL).
+    Convert a PIL Image or image bytes into Zebra Programming Language (ZPL).
 
     :param image: Image as a PIL Image or bytes object.
     :param compression_type (deprecated): ZPL compression type parameter that accepts \
@@ -131,7 +130,7 @@ class ZebrafyImage:
         if not isinstance(i, bytes) and not isinstance(i, Image.Image):
             raise TypeError(
                 "Image must be a valid bytes object or PIL.Image.Image object."
-                " {param_type} was given.".format(param_type=type(i))
+                f" {type(i)} was given."
             )
         self._image = i
 
@@ -142,17 +141,9 @@ class ZebrafyImage:
         if f is None:
             raise ValueError("Format cannot be empty.")
         if not isinstance(f, str):
-            raise TypeError(
-                "Format must be a valid string. {param_type} was given.".format(
-                    param_type=type(f)
-                )
-            )
+            raise TypeError(f"Format must be a valid string. {type(f)} was given.")
         if f not in ["ASCII", "B64", "Z64"]:
-            raise ValueError(
-                'Format must be "ASCII","B64", or "Z64". {param} was given.'.format(
-                    param=f
-                )
-            )
+            raise ValueError(f'Format must be "ASCII","B64", or "Z64". {f} was given.')
         self._format = f
 
     invert = property(operator.attrgetter("_invert"))
@@ -162,11 +153,7 @@ class ZebrafyImage:
         if i is None:
             raise ValueError("Invert cannot be empty.")
         if not isinstance(i, bool):
-            raise TypeError(
-                "Invert must be a boolean. {param_type} was given.".format(
-                    param_type=type(i)
-                )
-            )
+            raise TypeError(f"Invert must be a boolean. {type(i)} was given.")
         self._invert = i
 
     dither = property(operator.attrgetter("_dither"))
@@ -176,11 +163,7 @@ class ZebrafyImage:
         if d is None:
             raise ValueError("Dither cannot be empty.")
         if not isinstance(d, bool):
-            raise TypeError(
-                "Dither must be a boolean. {param_type} was given.".format(
-                    param_type=type(d)
-                )
-            )
+            raise TypeError(f"Dither must be a boolean. {type(d)} was given.")
         self._dither = d
 
     threshold = property(operator.attrgetter("_threshold"))
@@ -190,15 +173,9 @@ class ZebrafyImage:
         if t is None:
             raise ValueError("Threshold cannot be empty.")
         if not isinstance(t, int):
-            raise TypeError(
-                "Threshold must be an integer. {param_type} was given.".format(
-                    param_type=type(t)
-                )
-            )
+            raise TypeError(f"Threshold must be an integer. {type(t)} was given.")
         if t < 0 or t > 255:
-            raise ValueError(
-                "Threshold must be within 0 to 255. {param} was given.".format(param=t)
-            )
+            raise ValueError(f"Threshold must be within 0 to 255. {t} was given.")
         self._threshold = t
 
     width = property(operator.attrgetter("_width"))
@@ -208,11 +185,7 @@ class ZebrafyImage:
         if w is None:
             raise ValueError("Width cannot be empty.")
         if not isinstance(w, int):
-            raise TypeError(
-                "Width must be an integer. {param_type} was given.".format(
-                    param_type=type(w)
-                )
-            )
+            raise TypeError(f"Width must be an integer. {type(w)} was given.")
         self._width = w
 
     height = property(operator.attrgetter("_height"))
@@ -222,11 +195,7 @@ class ZebrafyImage:
         if h is None:
             raise ValueError("Height cannot be empty.")
         if not isinstance(h, int):
-            raise TypeError(
-                "Height must be an integer. {param_type} was given.".format(
-                    param_type=type(h)
-                )
-            )
+            raise TypeError(f"Height must be an integer. {type(h)} was given.")
         self._height = h
 
     pos_x = property(operator.attrgetter("_pos_x"))
@@ -236,11 +205,7 @@ class ZebrafyImage:
         if x is None:
             raise ValueError("X position cannot be empty.")
         if not isinstance(x, int):
-            raise TypeError(
-                "X position must be an integer. {param_type} was given.".format(
-                    param_type=type(x)
-                )
-            )
+            raise TypeError(f"X position must be an integer. {type(x)} was given.")
         self._pos_x = x
 
     pos_y = property(operator.attrgetter("_pos_y"))
@@ -250,11 +215,7 @@ class ZebrafyImage:
         if y is None:
             raise ValueError("Y position cannot be empty.")
         if not isinstance(y, int):
-            raise TypeError(
-                "Y position must be an integer. {param_type} was given.".format(
-                    param_type=type(y)
-                )
-            )
+            raise TypeError(f"Y position must be an integer. {type(y)} was given.")
         self._pos_y = y
 
     rotation = property(operator.attrgetter("_rotation"))
@@ -264,16 +225,10 @@ class ZebrafyImage:
         if r is None:
             raise ValueError("Rotation cannot be empty.")
         if not isinstance(r, int):
-            raise TypeError(
-                "Rotation must be an integer. {param_type} was given.".format(
-                    param_type=type(r)
-                )
-            )
+            raise TypeError(f"Rotation must be an integer. {type(r)} was given.")
         if r not in [0, 90, 180, 270]:
             raise ValueError(
-                'Rotation must be "0", "90", "180" or "270". {param} was given.'.format(
-                    param=r
-                )
+                f'Rotation must be "0", "90", "180" or "270". {r} was given.'
             )
         self._rotation = r
 
@@ -284,17 +239,11 @@ class ZebrafyImage:
         if c is None:
             raise ValueError("Complete ZPL cannot be empty.")
         if not isinstance(c, bool):
-            raise TypeError(
-                "Complete ZPL must be a boolean. {param_type} was given.".format(
-                    param_type=type(c)
-                )
-            )
+            raise TypeError(f"Complete ZPL must be a boolean. {type(c)} was given.")
         self._complete_zpl = c
 
     def _compression_type_to_format(self, compression_type: str) -> str:
-        """
-        Convert deprecated compression type to format.
-        """
+        """Convert deprecated compression type to format."""
         if compression_type.upper() == "A":
             return "ASCII"
         elif compression_type.upper() == "B":
@@ -304,7 +253,7 @@ class ZebrafyImage:
 
     def to_zpl(self) -> str:
         """
-        Converts PIL Image or image bytes to Zebra Programming Language (ZPL).
+        Convert PIL Image or image bytes into Zebra Programming Language (ZPL).
 
         :returns: A complete ZPL file string which can be sent to a ZPL compatible \
         printer or a ZPL graphic field if complete_zpl is not set.
@@ -348,7 +297,7 @@ class ZebrafyImage:
         # Set graphic field position based on given parameters
         pos = "^FO0,0"
         if self._pos_x or self._pos_y:
-            pos = "^FO{x},{y}".format(x=self._pos_x, y=self._pos_y)
+            pos = f"^FO{self._pos_x},{self._pos_y}"
 
         # Return complete ZPL with header and footer or only the graphic field based on
         # given parameters
