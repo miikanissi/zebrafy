@@ -52,8 +52,7 @@ else:
 
 class ZebrafyZPL:
     """
-    Provides a method for converting Zebra Programming Language (ZPL) graphic fields \
-    to PDF and images.
+    Convert Zebra Programming Language (ZPL) graphic fields to PDF and images.
 
     :param zpl_data: A valid ZPL string.
     """
@@ -69,9 +68,7 @@ class ZebrafyZPL:
             raise ValueError("ZPL data cannot be empty.")
         if not isinstance(d, str):
             raise TypeError(
-                "ZPL data must be a valid ZPL string. {param_type} was given.".format(
-                    param_type=type(d)
-                )
+                f"ZPL data must be a valid ZPL string. {type(d)} was given."
             )
         self._zpl_data = d
 
@@ -84,12 +81,11 @@ class ZebrafyZPL:
         :returns: A tuple of integers containing the width and height of the \
         graphic field image.
         """
-
         return int(width * 8), int(total / width)
 
     def to_images(self) -> ToImagesType:
         """
-        Converts Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
+        Convert Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
 
         :returns: A list containing PIL Images converted from ZPL graphic fields.
         """
@@ -134,7 +130,7 @@ class ZebrafyZPL:
 
     def to_pdf(self) -> bytes:
         """
-        Converts Zebra Programming Language (ZPL) graphic fields to PDF.
+        Convert Zebra Programming Language (ZPL) graphic fields to PDF.
 
         :returns: PDF bytes from ZPL graphic fields.
         """

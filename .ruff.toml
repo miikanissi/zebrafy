@@ -1,0 +1,22 @@
+target-version = "py37"
+fix = true
+
+[lint]
+extend-select = [
+    "B", # flake8-bugbear
+    "C90", # mccabe
+    "I",  # isort
+    "UP",  # pyupgrade
+    "D", # pydocstyle
+]
+exclude = ["setup/*"]
+ignore = ["D100", "D107", "D203", "D212"]
+
+[format]
+exclude = ["setup/*"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "I001"]  # ignore unused and unsorted imports in __init__.py
+
+[lint.mccabe]
+max-complexity = 16
