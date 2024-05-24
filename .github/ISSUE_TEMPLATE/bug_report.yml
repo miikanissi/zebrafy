@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a problem with Zebrafy
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: "Description"
+      description: "A short description of the problem you are reporting."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Python version"
+      description: "Output of `python3 --version` (Zebrafy requires python >= 3.7)"
+      render: markdown
+      placeholder: |
+        Python 3.11.2
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: "Zebrafy version"
+      placeholder: "zebrafy v1.1.3"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Steps to reproduce"
+    validations:
+      required: true
