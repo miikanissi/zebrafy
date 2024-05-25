@@ -11,7 +11,7 @@ body:
   - type: textarea
     attributes:
       label: "Python version"
-      description: "Output of `python3 --version` (Zebrafy requires python >= 3.7)"
+      description: "Output of `python3 --version` (Zebrafy requires python >= 3.8)"
       render: markdown
       placeholder: |
         Python 3.11.2
