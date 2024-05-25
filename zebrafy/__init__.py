@@ -5,10 +5,13 @@ This package provides tools to facilitate the conversion of PDF documents and im
 and from Zebra Programming Language, which is used by Zebra label printers.
 """
 
+from importlib.metadata import version
+
 from .crc import CRC
 from .graphic_field import GraphicField
 from .zebrafy_image import ZebrafyImage
 from .zebrafy_pdf import ZebrafyPDF
 from .zebrafy_zpl import ZebrafyZPL
 
-__version__ = "1.1.3"
+
+__version__ = version("zebrafy")

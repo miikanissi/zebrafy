@@ -10,6 +10,7 @@
 
 import os
 import sys
+from importlib.metadata import version
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -19,8 +20,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Zebrafy"
 copyright = "2023, Miika Nissi"
 author = "Miika Nissi"
-version = "1.1.3"
-release = version
+release = version("zebrafy")
+version = release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

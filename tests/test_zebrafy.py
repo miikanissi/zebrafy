@@ -25,6 +25,7 @@
 import io
 import os
 import unittest
+from importlib.metadata import version
 from typing import Union
 
 # 2. Known third party imports:
@@ -53,7 +54,7 @@ class TestZebrafy(unittest.TestCase):
 
     def test_version(self):
         """Test package version."""
-        self.assertEqual(__version__, "1.1.3")
+        self.assertEqual(__version__, version("zebrafy"))
 
     ###########
     # CRC Tests
