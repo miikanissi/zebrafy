@@ -34,7 +34,7 @@ from PIL import Image
 from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
 
 # 3. Local imports in the relative form:
-from .crc import CRC
+from zebrafy.crc import CRC
 
 GF_MATCHER = re.compile(
     r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS"

@@ -30,7 +30,7 @@ from typing import Union
 from PIL import Image
 
 # 3. Local imports in the relative form:
-from .graphic_field import GraphicField
+from zebrafy.graphic_field import GraphicField
 
 
 class ZebrafyImage:

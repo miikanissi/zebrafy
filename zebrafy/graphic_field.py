@@ -30,7 +30,7 @@ import zlib
 from PIL.Image import Image
 
 # 3. Local imports in the relative form:
-from .crc import CRC
+from zebrafy.crc import CRC
 
 
 class GraphicField:

@@ -28,7 +28,7 @@ import operator
 from pypdfium2 import PdfDocument
 
 # 3. Local imports in the relative form:
-from .zebrafy_image import ZebrafyImage
+from zebrafy.zebrafy_image import ZebrafyImage
 
 
 class ZebrafyPDF:
