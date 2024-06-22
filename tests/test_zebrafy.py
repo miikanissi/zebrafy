@@ -387,6 +387,21 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(ValueError):
             zebrafy_pdf.threshold = 256
 
+    def test_zebrafy_pdf_dpi(self):
+        """Test ZebrafyPDF dpi input."""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.dpi = None
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.dpi = "123"
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.dpi = -1
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.dpi = 0
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.dpi = 721
+
     def test_zebrafy_pdf_width(self):
         """Test ZebrafyPDF width input."""
         pdf = self._read_static_file("test_pdf.pdf")
@@ -500,6 +515,16 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_pdf.pdf"), dither=False, threshold=215
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_high_threshold.zpl"))
+
+    def test_pdf_to_zpl_dpi_low(self):
+        """Test PDF to ZPL with low DPI."""
+        gf_zpl = ZebrafyPDF(self._read_static_file("test_pdf.pdf"), dpi=36).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_low_dpi.zpl"))
+
+    def test_pdf_to_zpl_dpi_high(self):
+        """Test PDF to ZPL with high DPI."""
+        gf_zpl = ZebrafyPDF(self._read_static_file("test_pdf.pdf"), dpi=144).to_zpl()
+        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_high_dpi.zpl"))
 
     def test_pdf_to_zpl_width_height(self):
         """Test PDF to ZPL with set width and height."""

@@ -53,6 +53,8 @@ class ZebrafyPDF:
     defaults to ``False``
     :param threshold: Black pixel threshold for undithered PDF (``0-255``), defaults \
     to ``128``
+    :param dpi: Pixels per PDF canvas unit. This defines the resolution scaling of the \
+    image (<72: compress, >72: stretch), defaults to ``72``
     :param width: Width of the PDF in the resulting ZPL. If ``0``, use default PDF \
     width, defaults to ``0``
     :param height: Height of the PDF in the resulting ZPL. If ``0``, use default \
@@ -79,6 +81,7 @@ class ZebrafyPDF:
         invert: bool = None,
         dither: bool = None,
         threshold: int = None,
+        dpi: int = None,
         width: int = None,
         height: int = None,
         pos_x: int = None,
@@ -103,6 +106,9 @@ class ZebrafyPDF:
         if threshold is None:
             threshold = 128
         self.threshold = threshold
+        if dpi is None:
+            dpi = 72
+        self.dpi = dpi
         if width is None:
             width = 0
         self.width = width
@@ -178,6 +184,23 @@ class ZebrafyPDF:
         if t < 0 or t > 255:
             raise ValueError(f"Threshold must be within 0 to 255. {t} was given.")
         self._threshold = t
+
+    dpi = property(operator.attrgetter("_dpi"))
+
+    @dpi.setter
+    def dpi(self, t):
+        if t is None:
+            raise ValueError("DPI cannot be empty.")
+        if not isinstance(t, int):
+            raise TypeError(f"DPI must be an integer. {type(t)} was given.")
+        if t <= 0:
+            raise ValueError(f"DPI must be a positive value. {t} was given.")
+        if t > 720:
+            raise ValueError(
+                "DPI must be less than 720. It is recommended to stick to a maximum "
+                f"of 300 to avoid issues. {t} was given."
+            )
+        self._dpi = t
 
     width = property(operator.attrgetter("_width"))
 
@@ -273,7 +296,7 @@ class ZebrafyPDF:
         pdf = PdfDocument(self._pdf_bytes)
         graphic_fields = []
         for page in pdf:
-            bitmap = page.render(scale=1, rotation=self._rotation)
+            bitmap = page.render(scale=(self._dpi / 72), rotation=self._rotation)
             pil_image = bitmap.to_pil()
             zebrafy_image = ZebrafyImage(
                 pil_image,
