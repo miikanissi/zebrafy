@@ -1,8 +1,8 @@
 """
-zebrafy: A Python library for converting PDF and images to Zebra Programming Language (ZPL).
+zebrafy: A Python library for converting PDF and images to Zebra Programming Language.
 
-This package provides tools to facilitate the conversion of PDF documents and images into
-and from Zebra Programming Language, which is used by Zebra label printers.
+This package provides tools to facilitate the conversion of PDF documents and images \
+into and from Zebra Programming Language, which is used by Zebra label printers.
 """
 
 try:

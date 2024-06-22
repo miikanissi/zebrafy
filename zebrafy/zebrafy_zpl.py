@@ -155,7 +155,7 @@ class ZebrafyZPL:
             page.gen_content()
 
         pdf_bytes = io.BytesIO()
-        # pypdfium2.PdfDocument save method not to be confused with PIL.Image save method
+        # pypdfium2.PdfDocument save method not to be confused with PIL.Image save
         pdf.save(pdf_bytes)
 
         return pdf_bytes.getvalue()
