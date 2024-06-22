@@ -63,11 +63,13 @@ If you want more control over the resulting ZPL data, **ZebrafyImage** and
 
 Additionally, **ZebrafyPDF** supports the following optional parameters:
 
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| Parameter            | Description                                                                                                  |
-+======================+==============================================================================================================+
-| ``split_pages``      | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)              |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
++----------------------+-----------------------------------------------------------------------------------------------------------------------+
+| Parameter            | Description                                                                                                           |
++======================+=======================================================================================================================+
+| ``dpi``              | Pixels per PDF canvas unit, defines resolution scaling of the PDF image (<72: compress, >72: stretch, default ``72``) |
++----------------------+-----------------------------------------------------------------------------------------------------------------------+
+| ``split_pages``      | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)                       |
++----------------------+-----------------------------------------------------------------------------------------------------------------------+
 
 
 Getting Started
@@ -176,6 +178,7 @@ conversion, with the addition of the ``split_pages`` parameter to split the PDF 
           invert=True,
           dither=False,
           threshold=128,
+          dpi=72,
           width=720,
           height=1280,
           pos_x=100,
