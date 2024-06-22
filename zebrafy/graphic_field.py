@@ -174,4 +174,7 @@ class GraphicField:
 
         :returns: Complete graphic field string for ZPL.
         """
-        return f"^GFA,{self._get_binary_byte_count()},{self._get_graphic_field_count()},{self._get_bytes_per_row()},{self._get_data_string()}^FS"
+        return (
+            f"^GFA,{self._get_binary_byte_count()},{self._get_graphic_field_count()},"
+            f"{self._get_bytes_per_row()},{self._get_data_string()}^FS"
+        )
