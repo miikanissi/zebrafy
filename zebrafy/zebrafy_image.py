@@ -52,7 +52,7 @@ class ZebrafyImage:
         - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
     :param invert: Invert the black and white in resulting image, defaults to ``False``
     :param dither: Dither the pixels instead of hard limit on black and white, \
-    defaults to ``False``
+    defaults to ``True``
     :param threshold: Black pixel threshold for undithered image (``0-255``), defaults \
     to ``128``
     :param width: Width of the image in the resulting ZPL. If ``0``, use default image \
