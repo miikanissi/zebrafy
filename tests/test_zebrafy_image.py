@@ -254,6 +254,29 @@ class TestZebrafyImage(TestZebrafyCommonBase):
             complete_zpl, self._read_static_file("test_image_multiple.zpl")
         )
 
+    def test_zebrafy_image_jpeg(self):
+        """Test ZebrafyImage with a JPEG image."""
+        jpeg_image = self._read_static_file("test_image.jpg")
+        zebrafy_image = ZebrafyImage(jpeg_image)
+        self.assertEqual(zebrafy_image.format, "ASCII")
+
+    def test_zebrafy_image_boundary_threshold(self):
+        """Test ZebrafyImage with boundary threshold values."""
+        zebrafy_image = ZebrafyImage(self.test_image)
+        zebrafy_image.threshold = 0
+        self.assertEqual(zebrafy_image.threshold, 0)
+        zebrafy_image.threshold = 255
+        self.assertEqual(zebrafy_image.threshold, 255)
+
+    def test_zebrafy_image_combined_parameters(self):
+        """Test ZebrafyImage with combined parameters."""
+        zebrafy_image = ZebrafyImage(
+            self.test_image, invert=True, dither=False, threshold=100
+        )
+        self.assertTrue(zebrafy_image.invert)
+        self.assertFalse(zebrafy_image.dither)
+        self.assertEqual(zebrafy_image.threshold, 100)
+
 
 if __name__ == "__main__":
     unittest.main()

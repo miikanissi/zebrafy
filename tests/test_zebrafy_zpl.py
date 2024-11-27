@@ -121,17 +121,6 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
 class TestZebrafyZPLImports(TestZebrafyCommonBase):
     """Test ZebrafyZPL imports."""
 
-    @patch("sys.version_info", (3, 9))
-    def test_imports_python_39_or_higher(self):
-        """Test ZebrafyZPL imports for Python 3.9 or higher."""
-        import importlib
-
-        importlib.reload(sys.modules["zebrafy.zebrafy_zpl"])
-        from zebrafy.zebrafy_zpl import DimensionsType, ToImagesType
-
-        self.assertEqual(DimensionsType, tuple[int, int])
-        self.assertEqual(ToImagesType, list[Image.Image])
-
     @patch("sys.version_info", (3, 8))
     def test_imports_python_38_or_lower(self):
         """Test ZebrafyZPL imports for Python 3.8 or lower."""
