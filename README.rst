@@ -33,43 +33,45 @@ graphic fields (^GF).
 If you want more control over the resulting ZPL data, **ZebrafyImage** and
 **ZebrafyPDF** support the following optional parameters:
 
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| Parameter            | Description                                                                                                  |
-+======================+==============================================================================================================+
-| ``format``           | ZPL graphic field format type (default ``"ASCII"``)                                                          |
-|                      |                                                                                                              |
-|                      | - ``"ASCII"`` — ASCII hexadecimal (most compatible)                                                          |
-|                      | - ``"B64"`` — Base64 Binary                                                                                  |
-|                      | - ``"Z64"`` — Z64 compressed binary (best compression)                                                       |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``invert``           | Invert the black and white in the image/PDF output. (``True`` or ``False``, default ``False``)               |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``dither``           | Dither the result instead of hard limit on black pixels. (``True`` or ``False``, default ``True``)           |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``threshold``        | Black pixel threshold for image without dithering (``0-255``, default ``128``)                               |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``width``            | Width of the image in the resulting ZPL, ``0`` to use original image/PDF width (default ``0``)               |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``height``           | Height of the image in the resulting ZPL, ``0`` to use original image/PDF height (default ``0``)             |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``pos_x``            | Pixel x position of the graphic field in resulting ZPL (default ``0``)                                       |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``pos_y``            | Pixel y position of the graphic field in resulting ZPL (default ``0``)                                       |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``rotation``         | Rotates the image by the specified degree (``0``, ``90``, ``180`` or ``270``, default ``0``)                 |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
-| ``complete_zpl``     | Add ZPL header and footer or only get the ZPL graphic field output (``True`` or ``False``, default ``True``) |
-+----------------------+--------------------------------------------------------------------------------------------------------------+
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| Parameter             | Description                                                                                                  |
++=======================+==============================================================================================================+
+| ``format``            | ZPL graphic field format type (default ``"ASCII"``)                                                          |
+|                       |                                                                                                              |
+|                       | - ``"ASCII"`` — ASCII hexadecimal (most compatible)                                                          |
+|                       | - ``"B64"`` — Base64 Binary                                                                                  |
+|                       | - ``"Z64"`` — Z64 compressed binary (best compression)                                                       |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``invert``            | Invert the black and white in the image/PDF output. (``True`` or ``False``, default ``False``)               |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``dither``            | Dither the result instead of hard limit on black pixels. (``True`` or ``False``, default ``True``)           |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``threshold``         | Black pixel threshold for image without dithering (``0-255``, default ``128``)                               |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``width``             | Width of the image in the resulting ZPL, ``0`` to use original image/PDF width (default ``0``)               |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``height``            | Height of the image in the resulting ZPL, ``0`` to use original image/PDF height (default ``0``)             |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``pos_x``             | Pixel x position of the graphic field in resulting ZPL (default ``0``)                                       |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``pos_y``             | Pixel y position of the graphic field in resulting ZPL (default ``0``)                                       |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``rotation``          | Rotates the image by the specified degree (``0``, ``90``, ``180`` or ``270``, default ``0``)                 |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``string_line_break`` | Number of characters in graphic field content after which a line break is inserted (default ``None``)        |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
+| ``complete_zpl``      | Add ZPL header and footer or only get the ZPL graphic field output (``True`` or ``False``, default ``True``) |
++-----------------------+--------------------------------------------------------------------------------------------------------------+
 
 Additionally, **ZebrafyPDF** supports the following optional parameters:
 
-+----------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Parameter            | Description                                                                                                           |
-+======================+=======================================================================================================================+
-| ``dpi``              | Pixels per PDF canvas unit, defines resolution scaling of the PDF image (<72: compress, >72: stretch, default ``72``) |
-+----------------------+-----------------------------------------------------------------------------------------------------------------------+
-| ``split_pages``      | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)                       |
-+----------------------+-----------------------------------------------------------------------------------------------------------------------+
++-----------------------+-----------------------------------------------------------------------------------------------------------------------+
+| Parameter             | Description                                                                                                           |
++=======================+=======================================================================================================================+
+| ``dpi``               | Pixels per PDF canvas unit, defines resolution scaling of the PDF image (<72: compress, >72: stretch, default ``72``) |
++-----------------------+-----------------------------------------------------------------------------------------------------------------------+
+| ``split_pages``       | Split the PDF into separate ZPL labels for each page (``True`` or ``False``, default ``False``)                       |
++-----------------------+-----------------------------------------------------------------------------------------------------------------------+
 
 
 Getting Started
@@ -128,6 +130,7 @@ Example usage with optional parameters:
           pos_x=100,
           pos_y=100,
           rotation=90,
+          string_line_break=80,
           complete_zpl=True,
       ).to_zpl()
 
@@ -184,6 +187,7 @@ conversion, with the addition of the ``split_pages`` parameter to split the PDF 
           pos_x=100,
           pos_y=100,
           rotation=90,
+          string_line_break=80,
           complete_zpl=True,
           split_pages=True,
       ).to_zpl()

@@ -95,6 +95,15 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(ValueError):
             gf.format = "D"
 
+    def test_graphic_field_string_line_break(self):
+        """Test GraphicField string_line_break input."""
+        im = Image.new(mode="RGB", size=(200, 200))
+        gf = GraphicField(im)
+        with self.assertRaises(TypeError):
+            gf.string_line_break = "123"
+        with self.assertRaises(ValueError):
+            gf.string_line_break = -20
+
     def test_graphic_field_deprecated_compression_type(self):
         """Test deprecated GraphicField compression_type input."""
         im = Image.new(mode="RGB", size=(200, 200))
@@ -226,6 +235,15 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(TypeError):
             zebrafy_image.complete_zpl = "123"
 
+    def test_zebrafy_image_string_line_break(self):
+        """Test ZebrafyImage string_line_break input."""
+        im = Image.new(mode="RGB", size=(200, 200))
+        zebrafy_image = ZebrafyImage(im)
+        with self.assertRaises(TypeError):
+            zebrafy_image.string_line_break = "123"
+        with self.assertRaises(ValueError):
+            zebrafy_image.string_line_break = -20
+
     # Output validation
     def test_image_to_default_zpl(self):
         """Test image to ZPL with default options."""
@@ -312,6 +330,15 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_image.png"), rotation=90
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_image_rotation.zpl"))
+
+    def test_image_to_zpl_string_line_break(self):
+        """Test image to ZPL with string_line_break."""
+        gf_zpl = ZebrafyImage(
+            self._read_static_file("test_image.png"), string_line_break=80
+        ).to_zpl()
+        self.assertEqual(
+            gf_zpl, self._read_static_file("test_image_string_line_break.zpl")
+        )
 
     def test_multiple_image_to_zpl(self):
         """Test multiple images to ZPL with default options."""
@@ -451,6 +478,15 @@ class TestZebrafy(unittest.TestCase):
         with self.assertRaises(ValueError):
             zebrafy_pdf.rotation = 45
 
+    def test_zebrafy_pdf_string_line_break(self):
+        """Test ZebrafyPdf string_line_break input."""
+        pdf = self._read_static_file("test_pdf.pdf")
+        zebrafy_pdf = ZebrafyPDF(pdf)
+        with self.assertRaises(TypeError):
+            zebrafy_pdf.string_line_break = "123"
+        with self.assertRaises(ValueError):
+            zebrafy_pdf.string_line_break = -20
+
     def test_zebrafy_pdf_complete_zpl(self):
         """Test ZebrafyPDF complete_zpl input."""
         pdf = self._read_static_file("test_pdf.pdf")
@@ -539,6 +575,15 @@ class TestZebrafy(unittest.TestCase):
             self._read_static_file("test_pdf.pdf"), rotation=90
         ).to_zpl()
         self.assertEqual(gf_zpl, self._read_static_file("test_pdf_rotation.zpl"))
+
+    def test_pdf_to_zpl_string_line_break(self):
+        """Test PDF to ZPL with string_line_break."""
+        gf_zpl = ZebrafyPDF(
+            self._read_static_file("test_pdf.pdf"), string_line_break=80
+        ).to_zpl()
+        self.assertEqual(
+            gf_zpl, self._read_static_file("test_pdf_string_line_break.zpl")
+        )
 
     def test_pdf_to_zpl_split_pages(self):
         """Test PDF to ZPL with split pages."""

@@ -63,6 +63,8 @@ class ZebrafyImage:
     :param pos_y: Y position of the image on the resulting ZPL, defaults to ``0``
     :param rotation: Additional rotation in degrees ``0``, ``90``, ``180``, or \
     ``270``, defaults to ``0``
+    :param string_line_break: Number of characters in graphic field content after \
+    which a new line is added, defaults to `None`.
     :param complete_zpl: Return a complete ZPL with header and footer included. \
     Otherwise return only the graphic field, defaults to ``True``
 
@@ -84,6 +86,7 @@ class ZebrafyImage:
         pos_x: int = None,
         pos_y: int = None,
         rotation: int = None,
+        string_line_break: int = None,
         complete_zpl: bool = None,
     ):
         self.image = image
@@ -117,6 +120,7 @@ class ZebrafyImage:
         if rotation is None:
             rotation = 0
         self.rotation = rotation
+        self.string_line_break = string_line_break
         if complete_zpl is None:
             complete_zpl = True
         self.complete_zpl = complete_zpl
@@ -232,6 +236,18 @@ class ZebrafyImage:
             )
         self._rotation = r
 
+    string_line_break = property(operator.attrgetter("_string_line_break"))
+
+    @string_line_break.setter
+    def string_line_break(self, s):
+        if s and not isinstance(s, int):
+            raise TypeError(
+                f"String line break must be a valid integer. {type(s)} was given."
+            )
+        if s and s < 1:
+            raise ValueError("String line break must be greater than 0.")
+        self._string_line_break = s
+
     complete_zpl = property(operator.attrgetter("_complete_zpl"))
 
     @complete_zpl.setter
@@ -292,7 +308,9 @@ class ZebrafyImage:
                 mode="1",
             )
 
-        graphic_field = GraphicField(pil_image, format=self._format)
+        graphic_field = GraphicField(
+            pil_image, format=self._format, string_line_break=self._string_line_break
+        )
 
         # Set graphic field position based on given parameters
         pos = "^FO0,0"
