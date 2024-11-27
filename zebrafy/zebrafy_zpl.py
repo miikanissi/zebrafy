@@ -46,8 +46,8 @@ if sys.version_info >= (3, 9):
 else:
     from typing import List, Tuple
 
-    ToImagesType = List[Image.Image]
     DimensionsType = Tuple[int, int]
+    ToImagesType = List[Image.Image]
 
 
 class ZebrafyZPL:
