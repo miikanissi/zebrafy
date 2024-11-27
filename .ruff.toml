@@ -1,13 +1,12 @@
 target-version = "py37"
 fix = true
-line-length = 88
 
 [lint]
 extend-select = [
     "B", # flake8-bugbear
     "C90", # mccabe
     "I",  # isort
-    "E501", # line too long
+    "E501", # line too long (default to 88)
     "UP",  # pyupgrade
     "D", # pydocstyle
 ]
@@ -20,6 +19,9 @@ docstring-code-format = true
 
 [lint.per-file-ignores]
 "__init__.py" = ["F401", "I001"]  # ignore unused and unsorted imports in __init__.py
+
+[lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [lint.mccabe]
 max-complexity = 16
