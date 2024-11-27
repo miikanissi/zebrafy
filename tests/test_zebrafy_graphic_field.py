@@ -25,6 +25,8 @@
 import unittest
 
 # 2. Known third party imports:
+from PIL import Image
+
 # 3. Local imports in the relative form:
 from zebrafy import GraphicField
 
@@ -69,6 +71,40 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         self.assertEqual(gfb.format, "B64")
         gfc = GraphicField(self.test_image, compression_type="C")
         self.assertEqual(gfc.format, "Z64")
+
+    def test_get_graphic_field(self):
+        """Test get_graphic_field method."""
+        gf = GraphicField(self.test_image)
+        zpl_string = gf.get_graphic_field()
+        self.assertTrue(zpl_string.startswith("^GFA"))
+
+    def test_get_data_string(self):
+        """Test _get_data_string method."""
+        gf = GraphicField(self.test_image, format="ASCII")
+        data_string = gf._get_data_string()
+        self.assertIsInstance(data_string, str)
+
+        gf = GraphicField(self.test_image, format="B64")
+        data_string = gf._get_data_string()
+        self.assertTrue(data_string.startswith(":B64:"))
+
+        gf = GraphicField(self.test_image, format="Z64")
+        data_string = gf._get_data_string()
+        self.assertTrue(data_string.startswith(":Z64:"))
+
+    def test_edge_cases(self):
+        """Test edge cases with different image sizes and color modes."""
+        small_image = Image.new("1", (1, 1))
+        gf = GraphicField(small_image)
+        self.assertEqual(gf._get_graphic_field_count(), 1)
+
+        large_image = Image.new("1", (1000, 1000))
+        gf = GraphicField(large_image)
+        self.assertEqual(gf._get_graphic_field_count(), 125000)
+
+        color_image = Image.new("RGB", (10, 10))
+        gf = GraphicField(color_image)
+        self.assertEqual(gf._get_graphic_field_count(), 20)
 
 
 if __name__ == "__main__":
