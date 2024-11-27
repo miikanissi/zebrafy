@@ -50,6 +50,8 @@ class GraphicField:
         - ``"ASCII"``: ASCII hexadecimal - most compatible (default)
         - ``"B64"``: Base64 binary
         - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
+    :param string_line_break: Number of characters in graphic field content after \
+    which a new line is added, defaults to `None`.
 
     .. deprecated:: 1.1.0
         The `compression_type` parameter is deprecated in favor of `format` and will \
@@ -57,7 +59,11 @@ class GraphicField:
     """
 
     def __init__(
-        self, pil_image: Image, compression_type: str = None, format: str = None
+        self,
+        pil_image: Image,
+        compression_type: str = None,
+        format: str = None,
+        string_line_break: int = None,
     ):
         self.pil_image = pil_image
         if format is None:
@@ -66,6 +72,7 @@ class GraphicField:
             else:
                 format = self._compression_type_to_format(compression_type)
         self.format = format.upper()
+        self.string_line_break = string_line_break
 
     pil_image = property(operator.attrgetter("_pil_image"))
 
@@ -92,6 +99,18 @@ class GraphicField:
                 f'Format type must be "ASCII","B64", or "Z64". {f} was given.'
             )
         self._format = f
+
+    string_line_break = property(operator.attrgetter("_string_line_break"))
+
+    @string_line_break.setter
+    def string_line_break(self, s):
+        if s and not isinstance(s, int):
+            raise TypeError(
+                f"String line break must be a valid integer. {type(s)} was given."
+            )
+        if s and s < 1:
+            raise ValueError("String line break must be greater than 0.")
+        self._string_line_break = s
 
     def _compression_type_to_format(self, compression_type: str) -> str:
         """Convert deprecated compression type to format."""
@@ -166,6 +185,11 @@ class GraphicField:
                 crc=CRC(z64_bytes).get_crc_hex_string(),
             )
 
+        if self._string_line_break:
+            data_string = "\n".join(
+                data_string[i : i + self._string_line_break]
+                for i in range(0, len(data_string), self._string_line_break)
+            )
         return data_string
 
     def get_graphic_field(self) -> str:

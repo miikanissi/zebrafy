@@ -63,6 +63,8 @@ class ZebrafyPDF:
     :param pos_y: Y position of the PDF on the resulting ZPL, defaults to ``0``
     :param rotation: Additional rotation in degrees ``0``, ``90``, ``180``, or \
     ``270``, defaults to ``0``
+    :param string_line_break: Number of characters in graphic field content after \
+    which a new line is added, defaults to `None`.
     :param split_pages: Split each PDF page as a new ZPL label  \
     (only applies if complete_zpl is set), defaults to ``False``
     :param complete_zpl: Return a complete ZPL with header and footer included. \
@@ -87,6 +89,7 @@ class ZebrafyPDF:
         pos_x: int = None,
         pos_y: int = None,
         rotation: int = None,
+        string_line_break: int = None,
         split_pages: bool = None,
         complete_zpl: bool = None,
     ):
@@ -124,6 +127,7 @@ class ZebrafyPDF:
         if rotation is None:
             rotation = 0
         self.rotation = rotation
+        self.string_line_break = string_line_break
         if split_pages is None:
             split_pages = False
         self.split_pages = split_pages
@@ -256,6 +260,18 @@ class ZebrafyPDF:
             )
         self._rotation = r
 
+    string_line_break = property(operator.attrgetter("_string_line_break"))
+
+    @string_line_break.setter
+    def string_line_break(self, s):
+        if s and not isinstance(s, int):
+            raise TypeError(
+                f"String line break must be a valid integer. {type(s)} was given."
+            )
+        if s and s < 1:
+            raise ValueError("String line break must be greater than 0.")
+        self._string_line_break = s
+
     split_pages = property(operator.attrgetter("_split_pages"))
 
     @split_pages.setter
@@ -309,6 +325,7 @@ class ZebrafyPDF:
                 pos_x=self._pos_x,
                 pos_y=self._pos_y,
                 rotation=0,  # Rotation is already handled in the PDF rendering
+                string_line_break=self._string_line_break,
                 complete_zpl=False,
             )
 
