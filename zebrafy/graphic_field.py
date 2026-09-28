@@ -61,9 +61,9 @@ class GraphicField:
     def __init__(
         self,
         pil_image: Image,
-        compression_type: str = None,
-        format: str = None,
-        string_line_break: int = None,
+        compression_type: str | None = None,
+        format: str | None = None,
+        string_line_break: int | None = None,
     ):
         self.pil_image = pil_image
         if format is None:

@@ -1,4 +1,3 @@
-target-version = "py37"
 fix = true
 
 [lint]

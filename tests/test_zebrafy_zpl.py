@@ -23,9 +23,7 @@
 
 # 1. Standard library imports:
 import io
-import sys
 import unittest
-from unittest.mock import patch
 
 # 2. Known third party imports:
 from PIL import Image
@@ -173,23 +171,6 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
         pdf_bytes = ZebrafyZPL(self._read_static_file("test_pdf_z64.zpl")).to_pdf()
         z64_zpl = ZebrafyPDF(pdf_bytes, format="Z64").to_zpl()
         self.assertEqual(z64_zpl, self._read_static_file("test_pdf_z64.zpl"))
-
-
-class TestZebrafyZPLImports(TestZebrafyCommonBase):
-    """Test ZebrafyZPL imports."""
-
-    @patch("sys.version_info", (3, 8))
-    def test_imports_python_38_or_lower(self):
-        """Test ZebrafyZPL imports for Python 3.8 or lower."""
-        import importlib
-
-        importlib.reload(sys.modules["zebrafy.zebrafy_zpl"])
-        from typing import List, Tuple
-
-        from zebrafy.zebrafy_zpl import DimensionsType, ToImagesType
-
-        self.assertEqual(DimensionsType, Tuple[int, int])
-        self.assertEqual(ToImagesType, List[Image.Image])
 
 
 if __name__ == "__main__":

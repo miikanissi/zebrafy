@@ -26,7 +26,6 @@ import base64
 import io
 import operator
 import re
-import sys
 import zlib
 
 # 2. Known third party imports:
@@ -42,14 +41,8 @@ GF_MATCHER = re.compile(
 )
 HEX_MATCHER = re.compile(r"[0-9A-Fa-f]*")
 
-if sys.version_info >= (3, 9):
-    DimensionsType = tuple[int, int]
-    ToImagesType = list[Image.Image]
-else:
-    from typing import List, Tuple
-
-    DimensionsType = Tuple[int, int]
-    ToImagesType = List[Image.Image]
+DimensionsType = tuple[int, int]
+ToImagesType = list[Image.Image]
 
 
 class ZebrafyZPL:
@@ -163,8 +156,8 @@ class ZebrafyZPL:
                     " ASCII is supported (^GFA)."
                 )
 
-            if data_bytes.startswith(":Z64") or data_bytes.startswith(":B64"):
-                zlib_compressed = True if data_bytes.startswith(":Z64") else False
+            if data_bytes.startswith((":Z64", ":B64")):
+                zlib_compressed = data_bytes.startswith(":Z64")
                 crc = data_bytes[-4:]
                 data_bytes = data_bytes[5:-5]
 

@@ -54,5 +54,4 @@ html_static_path = ["_static"]
 html_logo = "zebrafy-64.png"
 html_theme_options = {
     "logo_only": False,
-    "display_version": True,
 }
