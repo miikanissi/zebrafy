@@ -26,14 +26,14 @@ import unittest
 
 # 2. Known third party imports:
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL
+from zebrafy import PrinterDPI, ZebrafyImage, ZebrafyPDF, ZebrafyZPL
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
 # Option name, default, valid values, values raising TypeError, values raising
 # ValueError
 SHARED_OPTIONS = [
-    ("format", "ASCII", ["B64", "Z64"], [123], [None, "D", ""]),
+    ("format", "ASCII", ["ASCII_COMPRESSED", "B64", "Z64"], [123], [None, "D", ""]),
     ("invert", False, [True], ["123", 1], [None]),
     ("dither", True, [False], ["123", 0], [None]),
     ("threshold", 128, [0, 255], ["123", 1.0, True], [None, -1, 256]),
@@ -44,9 +44,10 @@ SHARED_OPTIONS = [
     ("rotation", 0, [90, 180, 270], ["123", 90.0], [None, 45]),
     ("string_line_break", None, [80, None], ["123"], [0, -20]),
     ("complete_zpl", True, [False], ["123"], [None]),
+    ("set_label_size", False, [True], ["123"], [None]),
 ]
 PDF_OPTIONS = [
-    ("dpi", 72, [36, 720], ["123", 72.0], [None, 0, 721]),
+    ("dpi", 203, [72, 720, PrinterDPI.DPI_300], ["123", 72.0], [None, 0, 721]),
     ("split_pages", True, [False], ["123"], [None]),
 ]
 
@@ -109,9 +110,13 @@ class TestZebrafyOptions(TestZebrafyCommonBase):
 
     def test_repr_leaves_out_input(self):
         """Test repr shows the options but not the converted data."""
-        text = repr(ZebrafyPDF(self.test_pdf, dpi=144))
-        self.assertIn("dpi=144", text)
+        text = repr(ZebrafyPDF(self.test_pdf, dpi=300))
+        self.assertIn("dpi=300", text)
         self.assertNotIn("PDF-1.4", text)
+
+    def test_printer_dpi(self):
+        """Test the printer resolution presets."""
+        self.assertEqual([int(dpi) for dpi in PrinterDPI], [152, 203, 300, 600])
 
 
 if __name__ == "__main__":

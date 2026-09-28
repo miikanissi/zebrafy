@@ -22,6 +22,7 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import binascii
 import dataclasses
 
 # 2. Known third party imports:
@@ -61,6 +62,10 @@ class CRC(Validated):
 
         :returns: CRC-16/XMODEM
         """
+        # binascii.crc_hqx implements CRC-16/XMODEM in C
+        if self.poly == 0x1021:
+            return binascii.crc_hqx(self.data_bytes, 0x0000)
+
         crc = 0x0000
         for b in self.data_bytes:
             crc ^= b << 8

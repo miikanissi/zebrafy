@@ -30,12 +30,13 @@ import zlib
 
 # 2. Known third party imports:
 from PIL import Image
-from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
+from pypdfium2 import PdfBitmap, PdfDocument, PdfImage, PdfMatrix
 
 # 3. Local imports in the relative form:
 from zebrafy._validation import Validated, validated_field
 from zebrafy.crc import CRC
 from zebrafy.graphic_field import invert_monochrome
+from zebrafy.options import dpi_field
 
 GF_MATCHER = re.compile(
     r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS",
@@ -53,6 +54,8 @@ class ZebrafyZPL(Validated):
     Convert Zebra Programming Language (ZPL) graphic fields to PDF and images.
 
     :param zpl_data: A valid ZPL string.
+    :param dpi: Resolution of the printer the ZPL was made for, in dots per inch. \
+    Sets the page size of the PDF from :meth:`to_pdf`, defaults to ``203``
     """
 
     zpl_data: str = validated_field(
@@ -63,6 +66,7 @@ class ZebrafyZPL(Validated):
         kw_only=False,
         repr=False,
     )
+    dpi: int = dpi_field()
 
     def _match_dimensions(self, total: int, width: int) -> DimensionsType:
         """
@@ -185,26 +189,26 @@ class ZebrafyZPL(Validated):
         """
         pil_images = self.to_images()
         pdf = PdfDocument.new()
+        try:
+            for pil_image in pil_images:
+                # A grayscale bitmap is stored losslessly with Flate compression
+                image = PdfImage.new(pdf)
+                image.set_bitmap(PdfBitmap.from_pil(pil_image.convert("L")))
 
-        for pil_image in pil_images:
-            # Save PIL Image as JPEG bytes for pypdfium2 to convert into PDF.
-            image_bytes = io.BytesIO()
-            pil_image.save(image_bytes, format="JPEG")
+                # Size the page so the image prints at its physical size
+                width = pil_image.width * 72 / self.dpi
+                height = pil_image.height * 72 / self.dpi
+                image.set_matrix(PdfMatrix().scale(width, height))
 
-            # Load image bytes into PDF Image using pypdfium2 and get size
-            image = PdfImage.new(pdf)
-            image.load_jpeg(image_bytes)
-            width, height = image.get_px_size()
-            matrix = PdfMatrix().scale(width, height)
-            image.set_matrix(matrix)
+                page = pdf.new_page(width, height)
+                page.insert_obj(image)
+                page.gen_content()
+                page.close()
 
-            # Save PDF Image on a new page on the PDF.
-            page = pdf.new_page(width, height)
-            page.insert_obj(image)
-            page.gen_content()
-
-        pdf_bytes = io.BytesIO()
-        # pypdfium2.PdfDocument save method not to be confused with PIL.Image save
-        pdf.save(pdf_bytes)
+            pdf_bytes = io.BytesIO()
+            # pypdfium2.PdfDocument save method not to be confused with PIL.Image save
+            pdf.save(pdf_bytes)
+        finally:
+            pdf.close()
 
         return pdf_bytes.getvalue()

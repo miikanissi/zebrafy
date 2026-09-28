@@ -61,6 +61,11 @@ class TestZebrafyCRC(TestZebrafyCommonBase):
         self.assertEqual(self.crc.get_crc_hex_string(), "A641")
         self.assertEqual(CRC(b"").get_crc_hex_string(), "0000")
 
+    def test_crc_custom_poly(self):
+        """Test CRC-16 with a polynomial other than CRC-16/XMODEM."""
+        # CRC-16/UMTS check value
+        self.assertEqual(CRC(b"123456789", poly=0x8005).get_crc_hex_string(), "FEE8")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -54,6 +54,7 @@ class TestZebrafyImage(TestZebrafyCommonBase):
             "test_image_ascii.zpl": {},
             "test_image_b64.zpl": {"format": "B64"},
             "test_image_z64.zpl": {"format": "Z64"},
+            "test_image_ascii_compressed.zpl": {"format": "ASCII_COMPRESSED"},
             "test_image_invert.zpl": {"invert": True},
             "test_image_invert_no_dither.zpl": {"dither": False, "invert": True},
             "test_image_no_dither.zpl": {"dither": False},
@@ -107,7 +108,7 @@ class TestZebrafyImage(TestZebrafyCommonBase):
         self.assertEqual(rotated.getpixel((35, 2)), 0)
         self.assertEqual(rotated.getpixel((2, 2)), 255)
 
-        pdf = ZebrafyZPL(ZebrafyImage(image, dither=False).to_zpl()).to_pdf()
+        pdf = ZebrafyZPL(ZebrafyImage(image, dither=False).to_zpl(), dpi=72).to_pdf()
         pdf_rotated = ZebrafyZPL(
             ZebrafyPDF(pdf, rotation=90, dither=False, dpi=72).to_zpl()
         ).to_images()[0]
@@ -142,6 +143,15 @@ class TestZebrafyImage(TestZebrafyCommonBase):
         rgba.save(png, format="PNG")
         zpl = ZebrafyImage(png.getvalue(), dither=False, complete_zpl=False).to_zpl()
         self.assertEqual(zpl, "^FO0,0^GFA,2,2,2,8000^FS")
+
+    def test_set_label_size(self):
+        """Test ^PW and ^LL fit the image and its position."""
+        image = Image.new("1", (16, 2), 255)
+        zpl = ZebrafyImage(image, pos_x=5, pos_y=7, set_label_size=True).to_zpl()
+        self.assertEqual(zpl, "^XA\n^PW21\n^LL9\n^FO5,7^GFA,4,4,2,00000000^FS\n^XZ\n")
+        # Label size needs a complete label
+        zpl = ZebrafyImage(image, set_label_size=True, complete_zpl=False).to_zpl()
+        self.assertNotIn("^PW", zpl)
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ import io
 import unittest
 
 # 2. Known third party imports:
+import pypdfium2
 from PIL import Image
 
 # 3. Local imports in the relative form:
@@ -156,12 +157,49 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
         with self.assertRaises(ValueError):
             zebrafy_broken_zpl.to_images()
 
+    def test_zebrafy_zpl_dpi(self):
+        """Test ZebrafyZPL dpi input."""
+        self.assertEqual(ZebrafyZPL(self.test_zpl).dpi, 203)
+        with self.assertRaises(ValueError):
+            ZebrafyZPL(self.test_zpl, dpi=0)
+
     def test_printed_dots_are_black(self):
         """Test 1 bits, which ZPL prints, become black pixels."""
         image = ZebrafyZPL("^XA^GFA,2,2,1,80,^FS^XZ").to_images()[0]
         self.assertEqual(image.getpixel((0, 0)), 0)
         self.assertEqual(image.getpixel((1, 0)), 255)
         self.assertEqual(image.getpixel((0, 1)), 255)
+
+    def test_to_pdf_is_lossless(self):
+        """Test the PDF from ZPL holds the exact image at its physical size."""
+        # Decoded images are a whole number of bytes wide, so use 408 dots
+        image = Image.new("1", (408, 203), 255)
+        for x in range(0, 408, 3):
+            image.putpixel((x, x % 203), 0)
+        zpl = ZebrafyImage(image, dither=False).to_zpl()
+
+        pdf = pypdfium2.PdfDocument(ZebrafyZPL(zpl).to_pdf())
+        try:
+            page = pdf[0]
+            # 408 x 203 dots at 203 DPI is 144.7 x 72 points
+            width, height = page.get_size()
+            self.assertAlmostEqual(width, 408 * 72 / 203, places=3)
+            self.assertEqual(height, 72)
+            (image_object,) = page.get_objects(
+                filter=[pypdfium2.raw.FPDF_PAGEOBJ_IMAGE]
+            )
+            stored = image_object.get_bitmap().to_pil().convert("1")
+            page.close()
+        finally:
+            pdf.close()
+        self.assertEqual(stored.tobytes(), image.tobytes())
+
+        # Page size follows the given printer resolution
+        pdf = pypdfium2.PdfDocument(ZebrafyZPL(zpl, dpi=72).to_pdf())
+        try:
+            self.assertEqual(pdf[0].get_size(), (408, 203))
+        finally:
+            pdf.close()
 
     def test_ascii_zpl_to_pdf(self):
         """Test ZPL GFA ASCII to PDF bytes."""

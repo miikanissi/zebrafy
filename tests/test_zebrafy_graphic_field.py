@@ -22,13 +22,15 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import random
 import unittest
 
 # 2. Known third party imports:
 from PIL import Image
 
 # 3. Local imports in the relative form:
-from zebrafy import GraphicField
+from zebrafy import GraphicField, ZebrafyZPL
+from zebrafy.graphic_field import compress_ascii
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
@@ -47,8 +49,8 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         """Test GraphicField format input."""
         gf = GraphicField(self.test_image)
         self.assertEqual(gf.format, "ASCII")
-        gf.format = "z64"
-        self.assertEqual(gf.format, "Z64")
+        gf.format = "ascii_compressed"
+        self.assertEqual(gf.format, "ASCII_COMPRESSED")
         with self.assertRaises(ValueError):
             gf.format = None
         with self.assertRaises(TypeError):
@@ -90,9 +92,10 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         image = Image.new("1", (16, 4))
 
         # ASCII binary byte count must match graphic field count
-        gf = GraphicField(image, format="ASCII")
-        self.assertEqual(gf._get_binary_byte_count(), gf._get_graphic_field_count())
-        self.assertEqual(gf._get_binary_byte_count(), 8)
+        for format in ["ASCII", "ASCII_COMPRESSED"]:
+            gf = GraphicField(image, format=format)
+            self.assertEqual(gf._get_binary_byte_count(), gf._get_graphic_field_count())
+            self.assertEqual(gf._get_binary_byte_count(), 8)
 
         # Line breaks are not counted
         gf = GraphicField(image, format="ASCII", string_line_break=3)
@@ -122,6 +125,48 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         self.assertEqual(gf._get_graphic_field_count(), 20)
         # 10 black dots and 6 white padding bits per row
         self.assertEqual(gf._get_data_string(), "FFC0" * 10)
+
+    def test_compress_ascii(self):
+        """Test ZPL ASCII compression of known rows."""
+        cases = [
+            # Row of zeros, repeated rows
+            ("0000" * 3, 2, ",::"),
+            # Row of ones
+            ("FFFF", 2, "!"),
+            # Trailing zeros and ones are filled
+            ("8000", 2, "8,"),
+            ("0FFF", 2, "0!"),
+            # Runs of 3 or more use repeat counts, shorter runs do not
+            ("AAAB", 2, "IAB"),
+            ("AABB", 2, "AABB"),
+            # 41 = h (40) + G (1)
+            ("F" * 41 + "0" * 9, 25, "hGF,"),
+            # Longest single run is z (400) + Y (19) = 419, longer runs are split
+            ("A" * 420, 210, "zYAA"),
+            ("A" * 800, 400, "zYAyGA"),
+        ]
+        for data, bytes_per_row, expected in cases:
+            with self.subTest(data=data[:12], bytes_per_row=bytes_per_row):
+                self.assertEqual(compress_ascii(data, bytes_per_row), expected)
+
+    def test_compress_ascii_round_trip(self):
+        """Test compressed ASCII graphic fields decode to the original image."""
+        rng = random.Random(1)
+        for width, height in [(1, 1), (8, 3), (13, 7), (64, 40), (203, 50)]:
+            image = Image.new("1", (width, height), 255)
+            # Mix of runs, noise, repeated rows, and empty rows
+            for y in range(height):
+                if y % 5 == 1:
+                    continue
+                for x in range(width):
+                    if (x // 7 + y // 3) % 3 == 0 or rng.random() < 0.05:
+                        image.putpixel((x, y), 0)
+            with self.subTest(size=(width, height)):
+                gf = GraphicField(image, format="ASCII_COMPRESSED")
+                decoded = ZebrafyZPL(gf.get_graphic_field()).to_images()[0]
+                self.assertEqual(
+                    decoded.crop((0, 0, width, height)).tobytes(), image.tobytes()
+                )
 
 
 if __name__ == "__main__":

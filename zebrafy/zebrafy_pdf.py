@@ -30,7 +30,7 @@ from pypdfium2 import PdfDocument
 
 # 3. Local imports in the relative form:
 from zebrafy._validation import validated_field
-from zebrafy.options import GraphicOptions
+from zebrafy.options import GraphicOptions, dpi_field
 
 
 @dataclasses.dataclass
@@ -39,8 +39,9 @@ class ZebrafyPDF(GraphicOptions):
     Provides a method for converting PDFs to Zebra Programming Language (ZPL).
 
     :param pdf_bytes: PDF as a bytes object.
-    :param dpi: Pixels per PDF canvas unit. This defines the resolution scaling of \
-    the image (<72: compress, >72: stretch), defaults to ``72``
+    :param dpi: Resolution to render the PDF at, in dots per inch. Use the \
+    resolution of the printer, see :class:`~zebrafy.PrinterDPI`, so that the PDF \
+    prints at its physical size, defaults to ``203``
     :param split_pages: Put each PDF page on a label of its own. Otherwise the pages \
     are stacked vertically on a single label, defaults to ``True``
 
@@ -56,7 +57,7 @@ class ZebrafyPDF(GraphicOptions):
         kw_only=False,
         repr=False,
     )
-    dpi: int = validated_field(72, "DPI", int, minimum=1, maximum=720)
+    dpi: int = dpi_field()
     split_pages: bool = validated_field(True, "Split pages", bool)
 
     def _render_pages(self) -> list[Image.Image]:
@@ -65,12 +66,20 @@ class ZebrafyPDF(GraphicOptions):
 
         :returns: A list of mode ``"1"`` images, one per page.
         """
-        images = []
-        for page in PdfDocument(self.pdf_bytes):
-            bitmap = page.render(scale=self.dpi / 72, rotation=self.rotation)
-            # Rotation is already handled in the PDF rendering
-            images.append(self._to_monochrome(bitmap.to_pil(), rotate=False))
-        return images
+        pdf = PdfDocument(self.pdf_bytes)
+        try:
+            images = []
+            for page in pdf:
+                try:
+                    bitmap = page.render(scale=self.dpi / 72, rotation=self.rotation)
+                    pil_image = bitmap.to_pil()
+                finally:
+                    page.close()
+                # Rotation is already handled in the PDF rendering
+                images.append(self._to_monochrome(pil_image, rotate=False))
+            return images
+        finally:
+            pdf.close()
 
     def to_zpl(self) -> str:
         """
@@ -94,5 +103,10 @@ class ZebrafyPDF(GraphicOptions):
             return "".join(graphic_fields)
 
         if self.split_pages:
-            return "".join(self._get_label(field) for field in graphic_fields)
-        return self._get_label("".join(graphic_fields))
+            return "".join(
+                self._get_label(graphic_field, *pil_image.size)
+                for graphic_field, pil_image in zip(graphic_fields, images, strict=True)
+            )
+
+        width = max(pil_image.width for pil_image in images)
+        return self._get_label("".join(graphic_fields), width, offset)
