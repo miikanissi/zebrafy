@@ -37,9 +37,10 @@ from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
 from zebrafy.crc import CRC
 
 GF_MATCHER = re.compile(
-    r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS"
+    r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS",
+    re.DOTALL,
 )
-HEX_MATCHER = re.compile(r"[0-9A-Fa-f\s]*")
+HEX_MATCHER = re.compile(r"[0-9A-Fa-f]*")
 
 if sys.version_info >= (3, 9):
     DimensionsType = tuple[int, int]
@@ -110,8 +111,6 @@ class ZebrafyZPL:
         row = ""
         repeat = 0
         for char in data:
-            if char.isspace():
-                continue
             if "G" <= char <= "Y":
                 repeat += ord(char) - ord("F")
             elif "g" <= char <= "z":
@@ -155,7 +154,8 @@ class ZebrafyZPL:
             bytes_per_row = int(match[3])
             width, height = self._match_dimensions(int(match[2]), bytes_per_row)
             compression_type = match[0].upper()
-            data_bytes = match[4]
+            # Remove line breaks, e.g. from string_line_break
+            data_bytes = "".join(match[4].split())
 
             if compression_type != "A":
                 raise ValueError(

@@ -31,7 +31,7 @@ from unittest.mock import patch
 from PIL import Image
 
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyPDF, ZebrafyZPL
+from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
@@ -74,6 +74,25 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
         self.assertEqual(
             image_bytes.getvalue(), self._read_static_file("test_image_z64.png")
         )
+
+    def test_string_line_break_zpl_to_image(self):
+        """Test ZPL GFA with line breaks in graphic field data to image."""
+        image = ZebrafyZPL(
+            self._read_static_file("test_image_string_line_break.zpl")
+        ).to_images()[0]
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format="PNG")
+        self.assertEqual(
+            image_bytes.getvalue(), self._read_static_file("test_image_ascii.png")
+        )
+
+        test_image = Image.new("1", (16, 4))
+        test_image.putpixel((3, 1), 1)
+        for format in ["ASCII", "B64", "Z64"]:
+            zpl = ZebrafyImage(test_image, format=format, string_line_break=3).to_zpl()
+            self.assertIn("\n", zpl.split("^GF", 1)[1])
+            image = ZebrafyZPL(zpl).to_images()[0]
+            self.assertEqual(image.tobytes(), test_image.tobytes())
 
     def test_compressed_ascii_zpl_to_image(self):
         """Test ZPL GFA compressed ASCII to image."""
