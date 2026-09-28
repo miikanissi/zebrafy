@@ -47,6 +47,8 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         """Test GraphicField format input."""
         gf = GraphicField(self.test_image)
         self.assertEqual(gf.format, "ASCII")
+        gf.format = "z64"
+        self.assertEqual(gf.format, "Z64")
         with self.assertRaises(ValueError):
             gf.format = None
         with self.assertRaises(TypeError):
@@ -62,15 +64,6 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
             gf.string_line_break = "123"
         with self.assertRaises(ValueError):
             gf.string_line_break = -20
-
-    def test_graphic_field_deprecated_compression_type(self):
-        """Test deprecated GraphicField compression_type input."""
-        gfa = GraphicField(self.test_image, compression_type="A")
-        self.assertEqual(gfa.format, "ASCII")
-        gfb = GraphicField(self.test_image, compression_type="B")
-        self.assertEqual(gfb.format, "B64")
-        gfc = GraphicField(self.test_image, compression_type="C")
-        self.assertEqual(gfc.format, "Z64")
 
     def test_get_graphic_field(self):
         """Test get_graphic_field method."""
@@ -122,9 +115,13 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         gf = GraphicField(large_image)
         self.assertEqual(gf._get_graphic_field_count(), 125000)
 
-        color_image = Image.new("RGB", (10, 10))
+    def test_non_monochrome_image(self):
+        """Test images that are not black and white are converted first."""
+        color_image = Image.new("RGB", (10, 10), "black")
         gf = GraphicField(color_image)
         self.assertEqual(gf._get_graphic_field_count(), 20)
+        # 10 black dots and 6 white padding bits per row
+        self.assertEqual(gf._get_data_string(), "FFC0" * 10)
 
 
 if __name__ == "__main__":

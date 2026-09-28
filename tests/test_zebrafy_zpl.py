@@ -30,6 +30,7 @@ from PIL import Image
 
 # 3. Local imports in the relative form:
 from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL
+from zebrafy.graphic_field import invert_monochrome
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
@@ -104,7 +105,8 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
 
         def to_bytes(bytes_total, bytes_per_row, data):
             zpl = f"^XA^GFA,{bytes_total},{bytes_total},{bytes_per_row},{data}^FS^XZ"
-            return ZebrafyZPL(zpl).to_images()[0].tobytes()
+            # Images show printed 1 bits as black 0 pixels, so invert them back
+            return invert_monochrome(ZebrafyZPL(zpl).to_images()[0]).tobytes()
 
         # Repeat counts, zero fill, one fill and previous row repeat
         self.assertEqual(
@@ -153,6 +155,13 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
         )
         with self.assertRaises(ValueError):
             zebrafy_broken_zpl.to_images()
+
+    def test_printed_dots_are_black(self):
+        """Test 1 bits, which ZPL prints, become black pixels."""
+        image = ZebrafyZPL("^XA^GFA,2,2,1,80,^FS^XZ").to_images()[0]
+        self.assertEqual(image.getpixel((0, 0)), 0)
+        self.assertEqual(image.getpixel((1, 0)), 255)
+        self.assertEqual(image.getpixel((0, 1)), 255)
 
     def test_ascii_zpl_to_pdf(self):
         """Test ZPL GFA ASCII to PDF bytes."""

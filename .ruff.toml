@@ -22,5 +22,13 @@ docstring-code-format = true
 [lint.isort]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
+[lint.flake8-bugbear]
+# Dataclass field factories return immutable dataclasses.Field objects
+extend-immutable-calls = [
+    "zebrafy._validation.validated_field",
+    "zebrafy.graphic_field.format_field",
+    "zebrafy.graphic_field.string_line_break_field",
+]
+
 [lint.mccabe]
 max-complexity = 16

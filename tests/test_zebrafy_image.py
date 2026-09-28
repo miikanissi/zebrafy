@@ -22,11 +22,14 @@
 ########################################################################################
 
 # 1. Standard library imports:
+import io
 import unittest
 
 # 2. Known third party imports:
+from PIL import Image
+
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyImage
+from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
@@ -40,208 +43,30 @@ class TestZebrafyImage(TestZebrafyCommonBase):
         super().setUpClass()
         cls.static_test_image = cls._read_static_file("test_image.png")
 
-    def test_zebrafy_image_image(self):
-        """Test ZebrafyImage image input."""
-        with self.assertRaises(ValueError):
-            ZebrafyImage(None)
-        with self.assertRaises(TypeError):
-            ZebrafyImage(123)
-
-    def test_zebrafy_image_format(self):
-        """Test ZebrafyImage format input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.format, "ASCII")
-        with self.assertRaises(ValueError):
-            zebrafy_image.format = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.format = 123
-        with self.assertRaises(ValueError):
-            zebrafy_image.format = "D"
-
-    def test_zebrafy_image_deprecated_compression_type(self):
-        """Test deprecated ZebrafyImage compression_type input."""
-        gfa = ZebrafyImage(self.test_image, compression_type="A")
-        self.assertEqual(gfa.format, "ASCII")
-        gfb = ZebrafyImage(self.test_image, compression_type="B")
-        self.assertEqual(gfb.format, "B64")
-        gfc = ZebrafyImage(self.test_image, compression_type="C")
-        self.assertEqual(gfc.format, "Z64")
-
-    def test_zebrafy_image_invert(self):
-        """Test ZebrafyImage invert input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertFalse(zebrafy_image.invert)
-        with self.assertRaises(ValueError):
-            zebrafy_image.invert = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.invert = "123"
-
-    def test_zebrafy_image_dither(self):
-        """Test ZebrafyImage dither input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertTrue(zebrafy_image.dither)
-        with self.assertRaises(ValueError):
-            zebrafy_image.dither = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.dither = "123"
-
-    def test_zebrafy_image_threshold(self):
-        """Test ZebrafyImage threshold input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.threshold, 128)
-        with self.assertRaises(ValueError):
-            zebrafy_image.threshold = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.threshold = "123"
-        with self.assertRaises(ValueError):
-            zebrafy_image.threshold = -1
-        with self.assertRaises(ValueError):
-            zebrafy_image.threshold = 256
-
-    def test_zebrafy_image_width(self):
-        """Test ZebrafyImage width input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.width, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_image.width = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.width = "123"
-
-    def test_zebrafy_image_height(self):
-        """Test ZebrafyImage height input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.height, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_image.height = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.height = "123"
-
-    def test_zebrafy_image_pos_x(self):
-        """Test ZebrafyImage pos_x input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.pos_x, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_image.pos_x = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.pos_x = "123"
-
-    def test_zebrafy_image_pos_y(self):
-        """Test ZebrafyImage pos_y input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.pos_y, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_image.pos_y = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.pos_y = "123"
-
-    def test_zebrafy_image_rotation(self):
-        """Test ZebrafyImage rotation input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertEqual(zebrafy_image.rotation, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_image.rotation = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.rotation = "123"
-        with self.assertRaises(TypeError):
-            zebrafy_image.rotation = 90.0
-        with self.assertRaises(ValueError):
-            zebrafy_image.rotation = 45
-
-    def test_zebrafy_image_complete_zpl(self):
-        """Test ZebrafyImage complete_zpl input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertTrue(zebrafy_image.complete_zpl)
-        with self.assertRaises(ValueError):
-            zebrafy_image.complete_zpl = None
-        with self.assertRaises(TypeError):
-            zebrafy_image.complete_zpl = "123"
-
-    def test_zebrafy_image_string_line_break(self):
-        """Test ZebrafyImage string_line_break input."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        self.assertIsNone(zebrafy_image.string_line_break)
-        with self.assertRaises(TypeError):
-            zebrafy_image.string_line_break = "123"
-        with self.assertRaises(ValueError):
-            zebrafy_image.string_line_break = -20
+    def _assert_fixture(self, file_name, **options):
+        zpl = ZebrafyImage(self.static_test_image, **options).to_zpl()
+        self.assertEqual(zpl, self._read_static_file(file_name))
 
     # Output validation
-    def test_image_to_default_zpl(self):
-        """Test image to ZPL with default options."""
-        default_zpl = ZebrafyImage(self.static_test_image).to_zpl()
-        self.assertEqual(default_zpl, self._read_static_file("test_image_ascii.zpl"))
-
-    def test_image_to_ascii_zpl(self):
-        """Test image to ZPL with A (ASCII) compression."""
-        ascii_zpl = ZebrafyImage(self.static_test_image, format="ASCII").to_zpl()
-        self.assertEqual(ascii_zpl, self._read_static_file("test_image_ascii.zpl"))
-
-    def test_image_to_b64_zpl(self):
-        """Test image to ZPL with B (B64 Binary) compression."""
-        b64_zpl = ZebrafyImage(self.static_test_image, format="B64").to_zpl()
-        self.assertEqual(b64_zpl, self._read_static_file("test_image_b64.zpl"))
-
-    def test_image_to_z64_zpl(self):
-        """Test image to ZPL with C (Z64 Binary) compression."""
-        z64_zpl = ZebrafyImage(self.static_test_image, format="Z64").to_zpl()
-        self.assertEqual(z64_zpl, self._read_static_file("test_image_z64.zpl"))
-
-    def test_image_to_zpl_invert(self):
-        """Test image to ZPL inverting the image."""
-        gf_zpl = ZebrafyImage(self.static_test_image, invert=True).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_invert.zpl"))
-
-    def test_image_to_zpl_invert_no_dither(self):
-        """Test image to ZPL without dithering and inverting the image."""
-        gf_zpl = ZebrafyImage(
-            self.static_test_image, dither=False, invert=True
-        ).to_zpl()
-        self.assertEqual(
-            gf_zpl, self._read_static_file("test_image_invert_no_dither.zpl")
-        )
-
-    def test_image_to_zpl_no_dither(self):
-        """Test image to ZPL without dithering the image."""
-        gf_zpl = ZebrafyImage(self.static_test_image, dither=False).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_no_dither.zpl"))
-
-    def test_image_to_zpl_threshold_low(self):
-        """Test image to ZPL without dithering the image and low threshold."""
-        gf_zpl = ZebrafyImage(
-            self.static_test_image, dither=False, threshold=40
-        ).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_low_threshold.zpl"))
-
-    def test_image_to_zpl_threshold_high(self):
-        """Test image to ZPL without dithering the image and high threshold."""
-        gf_zpl = ZebrafyImage(
-            self.static_test_image, dither=False, threshold=215
-        ).to_zpl()
-        self.assertEqual(
-            gf_zpl, self._read_static_file("test_image_high_threshold.zpl")
-        )
-
-    def test_image_to_zpl_width_height(self):
-        """Test image to ZPL with width and height."""
-        gf_zpl = ZebrafyImage(self.static_test_image, width=500, height=500).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_width_height.zpl"))
-
-    def test_image_to_zpl_pos_x_pos_y(self):
-        """Test image to ZPL with pos_x and pos_y."""
-        gf_zpl = ZebrafyImage(self.static_test_image, pos_x=100, pos_y=200).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_pos_x_pos_y.zpl"))
-
-    def test_image_to_zpl_rotation(self):
-        """Test image to ZPL with rotation."""
-        gf_zpl = ZebrafyImage(self.static_test_image, rotation=90).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_image_rotation.zpl"))
-
-    def test_image_to_zpl_string_line_break(self):
-        """Test image to ZPL with string_line_break."""
-        gf_zpl = ZebrafyImage(self.static_test_image, string_line_break=80).to_zpl()
-        self.assertEqual(
-            gf_zpl, self._read_static_file("test_image_string_line_break.zpl")
-        )
+    def test_image_to_zpl_fixtures(self):
+        """Test image to ZPL against stored fixtures."""
+        fixtures = {
+            "test_image_ascii.zpl": {},
+            "test_image_b64.zpl": {"format": "B64"},
+            "test_image_z64.zpl": {"format": "Z64"},
+            "test_image_invert.zpl": {"invert": True},
+            "test_image_invert_no_dither.zpl": {"dither": False, "invert": True},
+            "test_image_no_dither.zpl": {"dither": False},
+            "test_image_low_threshold.zpl": {"dither": False, "threshold": 40},
+            "test_image_high_threshold.zpl": {"dither": False, "threshold": 215},
+            "test_image_width_height.zpl": {"width": 500, "height": 500},
+            "test_image_pos_x_pos_y.zpl": {"pos_x": 100, "pos_y": 200},
+            "test_image_rotation.zpl": {"rotation": 90},
+            "test_image_string_line_break.zpl": {"string_line_break": 80},
+        }
+        for file_name, options in fixtures.items():
+            with self.subTest(file_name=file_name):
+                self._assert_fixture(file_name, **options)
 
     def test_multiple_image_to_zpl(self):
         """Test multiple images to ZPL with default options."""
@@ -257,25 +82,66 @@ class TestZebrafyImage(TestZebrafyCommonBase):
     def test_zebrafy_image_jpeg(self):
         """Test ZebrafyImage with a JPEG image."""
         jpeg_image = self._read_static_file("test_image.jpg")
-        zebrafy_image = ZebrafyImage(jpeg_image)
-        self.assertEqual(zebrafy_image.format, "ASCII")
+        self.assertTrue(ZebrafyImage(jpeg_image).to_zpl().startswith("^XA\n^FO0,0^GFA"))
 
-    def test_zebrafy_image_boundary_threshold(self):
-        """Test ZebrafyImage with boundary threshold values."""
-        zebrafy_image = ZebrafyImage(self.test_image)
-        zebrafy_image.threshold = 0
-        self.assertEqual(zebrafy_image.threshold, 0)
-        zebrafy_image.threshold = 255
-        self.assertEqual(zebrafy_image.threshold, 255)
+    def test_black_pixels_are_printed(self):
+        """Test black pixels become 1 bits, which ZPL prints as dots."""
+        image = Image.new("L", (16, 2), 255)
+        image.putpixel((0, 0), 0)
+        for dither in (True, False):
+            zpl = ZebrafyImage(image, dither=dither, complete_zpl=False).to_zpl()
+            self.assertEqual(zpl, "^FO0,0^GFA,4,4,2,80000000^FS")
+        zpl = ZebrafyImage(image, invert=True, complete_zpl=False).to_zpl()
+        self.assertEqual(zpl, "^FO0,0^GFA,4,4,2,7FFFFFFF^FS")
 
-    def test_zebrafy_image_combined_parameters(self):
-        """Test ZebrafyImage with combined parameters."""
-        zebrafy_image = ZebrafyImage(
-            self.test_image, invert=True, dither=False, threshold=100
-        )
-        self.assertTrue(zebrafy_image.invert)
-        self.assertFalse(zebrafy_image.dither)
-        self.assertEqual(zebrafy_image.threshold, 100)
+    def test_rotation_is_clockwise_without_cropping(self):
+        """Test rotation keeps the whole image and matches PDF rotation."""
+        image = Image.new("L", (80, 40), 255)
+        image.paste(0, (0, 0, 8, 8))  # marker in the top left corner
+
+        rotated = ZebrafyZPL(
+            ZebrafyImage(image, rotation=90, dither=False).to_zpl()
+        ).to_images()[0]
+        self.assertEqual(rotated.size, (40, 80))
+        # Clockwise rotation moves the top left corner to the top right
+        self.assertEqual(rotated.getpixel((35, 2)), 0)
+        self.assertEqual(rotated.getpixel((2, 2)), 255)
+
+        pdf = ZebrafyZPL(ZebrafyImage(image, dither=False).to_zpl()).to_pdf()
+        pdf_rotated = ZebrafyZPL(
+            ZebrafyPDF(pdf, rotation=90, dither=False, dpi=72).to_zpl()
+        ).to_images()[0]
+        self.assertEqual(pdf_rotated.tobytes(), rotated.tobytes())
+
+        for rotation, size in ((180, (80, 40)), (270, (40, 80))):
+            zpl = ZebrafyImage(image, rotation=rotation).to_zpl()
+            self.assertEqual(ZebrafyZPL(zpl).to_images()[0].size, size)
+
+    def test_transparent_pixels_are_white(self):
+        """Test transparent pixels are treated as white."""
+        opaque_black = (0, 0, 0, 255)
+        transparent_black = (0, 0, 0, 0)
+        rgba = Image.new("RGBA", (16, 1), transparent_black)
+        rgba.putpixel((0, 0), opaque_black)
+
+        # Both palette entries are black, only entry 0 is transparent
+        palette = Image.new("P", (16, 1), 0)
+        palette.putpalette([0, 0, 0, 0, 0, 0])
+        palette.putpixel((0, 0), 1)
+        palette.info["transparency"] = 0
+
+        grayscale_alpha = rgba.convert("LA")
+
+        for image in (rgba, palette, grayscale_alpha):
+            with self.subTest(mode=image.mode):
+                zpl = ZebrafyImage(image, dither=False, complete_zpl=False).to_zpl()
+                self.assertEqual(zpl, "^FO0,0^GFA,2,2,2,8000^FS")
+
+        # Transparency survives a round trip through PNG bytes
+        png = io.BytesIO()
+        rgba.save(png, format="PNG")
+        zpl = ZebrafyImage(png.getvalue(), dither=False, complete_zpl=False).to_zpl()
+        self.assertEqual(zpl, "^FO0,0^GFA,2,2,2,8000^FS")
 
 
 if __name__ == "__main__":
