@@ -22,14 +22,15 @@
 ########################################################################################
 
 # 1. Standard library imports:
-import operator
+import dataclasses
 
 # 2. Known third party imports:
-
 # 3. Local imports in the relative form:
+from zebrafy._validation import Validated, validated_field
 
 
-class CRC:
+@dataclasses.dataclass
+class CRC(Validated):
     """
     Utility class to calculate CRC-16/XMODEM algorithm across the received data bytes.
 
@@ -43,33 +44,16 @@ class CRC:
     defaults to ``0x1021``
     """
 
-    def __init__(self, data_bytes: bytes, poly: int | None = None):
-        self.data_bytes = data_bytes
-        if poly is None:
-            poly = 0x1021
-        self.poly = poly
-
-    data_bytes = property(operator.attrgetter("_data_bytes"))
-
-    @data_bytes.setter
-    def data_bytes(self, d):
-        if d is None:
-            raise ValueError("Bytes data cannot be empty.")
-        if not isinstance(d, bytes):
-            raise TypeError(
-                f"Bytes data must be a valid bytes object. {type(d)} was given."
-            )
-        self._data_bytes = d
-
-    poly = property(operator.attrgetter("_poly"))
-
-    @poly.setter
-    def poly(self, p):
-        if p is None:
-            raise ValueError("Polynomial cannot be empty.")
-        if not isinstance(p, int):
-            raise TypeError(f"Polynomial must be a valid integer. {type(p)} was given.")
-        self._poly = p
+    data_bytes: bytes = validated_field(
+        dataclasses.MISSING,
+        "Bytes data",
+        bytes,
+        type_name="a valid bytes object",
+        allow_empty=True,
+        kw_only=False,
+        repr=False,
+    )
+    poly: int = validated_field(0x1021, "Polynomial", int, kw_only=False)
 
     def _get_crc16_xmodem(self) -> int:
         """
@@ -78,11 +62,11 @@ class CRC:
         :returns: CRC-16/XMODEM
         """
         crc = 0x0000
-        for b in self._data_bytes:
+        for b in self.data_bytes:
             crc ^= b << 8
             for _ in range(8):
                 if crc & 0x8000:
-                    crc = (crc << 1) ^ self._poly
+                    crc = (crc << 1) ^ self.poly
                 else:
                     crc <<= 1
                 crc &= 0xFFFF

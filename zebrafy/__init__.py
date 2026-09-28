@@ -14,6 +14,7 @@ except ImportError:
 
 from .crc import CRC
 from .graphic_field import GraphicField
+from .options import GraphicOptions
 from .zebrafy_image import ZebrafyImage
 from .zebrafy_pdf import ZebrafyPDF
 from .zebrafy_zpl import ZebrafyZPL

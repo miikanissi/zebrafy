@@ -23,27 +23,51 @@
 
 # 1. Standard library imports:
 import base64
-import operator
+import dataclasses
 import zlib
+from typing import Any
 
 # 2. Known third party imports:
-from PIL.Image import Image
+from PIL import Image
 
 # 3. Local imports in the relative form:
+from zebrafy._validation import Validated, validated_field
 from zebrafy.crc import CRC
 
+FORMATS = ("ASCII", "B64", "Z64")
 
-class GraphicField:
+
+def format_field() -> Any:
+    """Return a validated ``format`` dataclass field."""
+    return validated_field("ASCII", "Format", str, choices=FORMATS, normalize=str.upper)
+
+
+def string_line_break_field() -> Any:
+    """Return a validated ``string_line_break`` dataclass field."""
+    return validated_field(None, "String line break", int, optional=True, minimum=1)
+
+
+def invert_monochrome(pil_image: Image.Image) -> Image.Image:
+    """
+    Invert a black and white (mode ``"1"``) image.
+
+    Any nonzero pixel counts as white, the same as in ``Image.tobytes()``.
+
+    :param pil_image: A mode ``"1"`` image.
+    :returns: The inverted image.
+    """
+    return pil_image.point(lambda v: 0 if v else 255)
+
+
+@dataclasses.dataclass
+class GraphicField(Validated):
     """
     Converts a PIL image to Zebra Programming Language (ZPL) graphic field data.
 
-    :param PIL.Image.Image image: An instance of a PIL Image.
-    :param compression_type (deprecated): ZPL compression type parameter that accepts \
-    the following values, defaults to ``"A"``:
+    Black pixels are printed. Images that are not black and white (mode ``"1"``) \
+    are dithered to black and white first.
 
-        - ``"A"``: ASCII hexadecimal - most compatible (default)
-        - ``"B"``: Base64 binary
-        - ``"C"``: LZ77 / Zlib compressed base64 binary - best compression
+    :param PIL.Image.Image pil_image: An instance of a PIL Image.
     :param format: ZPL format parameter that accepts the following values, \
     defaults to ``"ASCII"``:
 
@@ -51,75 +75,32 @@ class GraphicField:
         - ``"B64"``: Base64 binary
         - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
     :param string_line_break: Number of characters in graphic field content after \
-    which a new line is added, defaults to `None`.
-
-    .. deprecated:: 1.1.0
-        The `compression_type` parameter is deprecated in favor of `format` and will \
-        be removed in version 2.0.0.
+    which a new line is added, defaults to ``None``.
     """
 
-    def __init__(
-        self,
-        pil_image: Image,
-        compression_type: str | None = None,
-        format: str | None = None,
-        string_line_break: int | None = None,
-    ):
-        self.pil_image = pil_image
-        if format is None:
-            if compression_type is None:
-                format = "ASCII"
-            else:
-                format = self._compression_type_to_format(compression_type)
-        self.format = format.upper()
-        self.string_line_break = string_line_break
+    pil_image: Image.Image = validated_field(
+        dataclasses.MISSING,
+        "Image",
+        Image.Image,
+        type_name="a valid PIL.Image.Image object",
+        kw_only=False,
+        repr=False,
+    )
+    format: str = format_field()
+    string_line_break: int | None = string_line_break_field()
 
-    pil_image = property(operator.attrgetter("_pil_image"))
+    def _get_image_bytes(self) -> bytes:
+        """
+        Get the image as packed rows of bits where ``1`` is a printed dot.
 
-    @pil_image.setter
-    def pil_image(self, i):
-        if not i:
-            raise ValueError("Image cannot be empty.")
-        if not isinstance(i, Image):
-            raise TypeError(
-                f"Image must be a valid PIL.Image.Image object. {type(i)} was given."
-            )
-        self._pil_image = i
-
-    format = property(operator.attrgetter("_format"))
-
-    @format.setter
-    def format(self, f):
-        if f is None:
-            raise ValueError("Format cannot be empty.")
-        if not isinstance(f, str):
-            raise TypeError(f"Format must be a valid string. {type(f)} was given.")
-        if f not in ["ASCII", "B64", "Z64"]:
-            raise ValueError(
-                f'Format type must be "ASCII","B64", or "Z64". {f} was given.'
-            )
-        self._format = f
-
-    string_line_break = property(operator.attrgetter("_string_line_break"))
-
-    @string_line_break.setter
-    def string_line_break(self, s):
-        if s and not isinstance(s, int):
-            raise TypeError(
-                f"String line break must be a valid integer. {type(s)} was given."
-            )
-        if s and s < 1:
-            raise ValueError("String line break must be greater than 0.")
-        self._string_line_break = s
-
-    def _compression_type_to_format(self, compression_type: str) -> str:
-        """Convert deprecated compression type to format."""
-        if compression_type.upper() == "A":
-            return "ASCII"
-        elif compression_type.upper() == "B":
-            return "B64"
-        elif compression_type.upper() == "C":
-            return "Z64"
+        :returns: Image bytes.
+        """
+        pil_image = self.pil_image
+        if pil_image.mode != "1":
+            pil_image = pil_image.convert("1")
+        # PIL stores black as 0, ZPL prints 1. Inverting the image instead of the
+        # bytes keeps the padding at the end of each row white.
+        return invert_monochrome(pil_image).tobytes()
 
     def _get_binary_byte_count(self) -> int:
         """
@@ -132,7 +113,7 @@ class GraphicField:
 
         :returns: Binary byte count
         """
-        if self._format == "ASCII":
+        if self.format == "ASCII":
             return self._get_graphic_field_count()
         return len(self._get_encoded_data_string())
 
@@ -145,7 +126,7 @@ class GraphicField:
 
         :returns: Bytes per row
         """
-        return int((self._pil_image.size[0] + 7) / 8)
+        return (self.pil_image.size[0] + 7) // 8
 
     def _get_graphic_field_count(self) -> int:
         """
@@ -153,9 +134,9 @@ class GraphicField:
 
         This is the total number of bytes comprising the image data (width x height).
 
-        :returns: Graphic field count."
+        :returns: Graphic field count.
         """
-        return int(self._get_bytes_per_row() * self._pil_image.size[1])
+        return self._get_bytes_per_row() * self.pil_image.size[1]
 
     def _get_encoded_data_string(self) -> str:
         """
@@ -163,31 +144,21 @@ class GraphicField:
 
         :returns: Graphic field data string depending on format.
         """
-        image_bytes = self._pil_image.tobytes()
-        data_string = ""
+        image_bytes = self._get_image_bytes()
 
-        # Format ASCII: Convert bytes to ASCII hexadecimal
-        if self._format == "ASCII":
-            data_string = image_bytes.hex()
+        if self.format == "ASCII":
+            return image_bytes.hex().upper()
 
-        # Format B64: Convert bytes to base64 and add header + CRC
-        elif self._format == "B64":
-            b64_bytes = base64.b64encode(image_bytes)
-            data_string = ":B64:{encoded_data}:{crc}".format(
-                encoded_data=b64_bytes.decode("ascii"),
-                crc=CRC(b64_bytes).get_crc_hex_string(),
-            )
-
-        # Format Z64: Convert LZ77/ Zlib compressed bytes to base64 and add
-        # header + CRC
-        elif self._format == "Z64":
-            z64_bytes = base64.b64encode(zlib.compress(image_bytes))
-            data_string = ":Z64:{encoded_data}:{crc}".format(
-                encoded_data=z64_bytes.decode("ascii"),
-                crc=CRC(z64_bytes).get_crc_hex_string(),
-            )
-
-        return data_string
+        # Format B64 and Z64: Convert (LZ77 / Zlib compressed) bytes to base64 and
+        # add header + CRC
+        if self.format == "Z64":
+            image_bytes = zlib.compress(image_bytes)
+        encoded = base64.b64encode(image_bytes)
+        return ":{format}:{encoded_data}:{crc}".format(
+            format=self.format,
+            encoded_data=encoded.decode("ascii"),
+            crc=CRC(encoded).get_crc_hex_string(),
+        )
 
     def _get_data_string(self) -> str:
         """
@@ -197,10 +168,10 @@ class GraphicField:
         if ``string_line_break`` is set.
         """
         data_string = self._get_encoded_data_string()
-        if self._string_line_break:
+        if self.string_line_break:
             data_string = "\n".join(
-                data_string[i : i + self._string_line_break]
-                for i in range(0, len(data_string), self._string_line_break)
+                data_string[i : i + self.string_line_break]
+                for i in range(0, len(data_string), self.string_line_break)
             )
         return data_string
 

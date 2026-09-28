@@ -23,8 +23,8 @@
 
 # 1. Standard library imports:
 import base64
+import dataclasses
 import io
-import operator
 import re
 import zlib
 
@@ -33,7 +33,9 @@ from PIL import Image
 from pypdfium2 import PdfDocument, PdfImage, PdfMatrix
 
 # 3. Local imports in the relative form:
+from zebrafy._validation import Validated, validated_field
 from zebrafy.crc import CRC
+from zebrafy.graphic_field import invert_monochrome
 
 GF_MATCHER = re.compile(
     r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS",
@@ -45,27 +47,22 @@ DimensionsType = tuple[int, int]
 ToImagesType = list[Image.Image]
 
 
-class ZebrafyZPL:
+@dataclasses.dataclass
+class ZebrafyZPL(Validated):
     """
     Convert Zebra Programming Language (ZPL) graphic fields to PDF and images.
 
     :param zpl_data: A valid ZPL string.
     """
 
-    def __init__(self, zpl_data: str):
-        self.zpl_data = zpl_data
-
-    zpl_data = property(operator.attrgetter("_zpl_data"))
-
-    @zpl_data.setter
-    def zpl_data(self, d):
-        if d is None:
-            raise ValueError("ZPL data cannot be empty.")
-        if not isinstance(d, str):
-            raise TypeError(
-                f"ZPL data must be a valid ZPL string. {type(d)} was given."
-            )
-        self._zpl_data = d
+    zpl_data: str = validated_field(
+        dataclasses.MISSING,
+        "ZPL data",
+        str,
+        type_name="a valid ZPL string",
+        kw_only=False,
+        repr=False,
+    )
 
     def _match_dimensions(self, total: int, width: int) -> DimensionsType:
         """
@@ -138,7 +135,7 @@ class ZebrafyZPL:
 
         :returns: A list containing PIL Images converted from ZPL graphic fields.
         """
-        matches = GF_MATCHER.findall(self._zpl_data)
+        matches = GF_MATCHER.findall(self.zpl_data)
         if not matches:
             raise ValueError("Could not find a graphic field (^GF) in ZPL content.")
 
@@ -148,7 +145,7 @@ class ZebrafyZPL:
             width, height = self._match_dimensions(int(match[2]), bytes_per_row)
             compression_type = match[0].upper()
             # Remove line breaks, e.g. from string_line_break
-            data_bytes = "".join(match[4].split())
+            data = "".join(match[4].split())
 
             if compression_type != "A":
                 raise ValueError(
@@ -156,26 +153,27 @@ class ZebrafyZPL:
                     " ASCII is supported (^GFA)."
                 )
 
-            if data_bytes.startswith((":Z64", ":B64")):
-                zlib_compressed = data_bytes.startswith(":Z64")
-                crc = data_bytes[-4:]
-                data_bytes = data_bytes[5:-5]
+            if data.startswith((":Z64", ":B64")):
+                zlib_compressed = data.startswith(":Z64")
+                crc = data[-4:]
+                encoded = data[5:-5].encode("ascii")
 
                 # Validate CRC to ensure data bytes are valid and unchanged
-                if crc != CRC(data_bytes.encode("ascii")).get_crc_hex_string():
+                if crc != CRC(encoded).get_crc_hex_string():
                     raise ValueError("CRC mismatch.")
 
-                data_bytes = base64.b64decode(data_bytes)
+                data_bytes = base64.b64decode(encoded)
 
                 # Decompress LZ77 / Zlib compression
                 if zlib_compressed:
                     data_bytes = zlib.decompress(data_bytes)
 
             else:
-                data_bytes = self._decompress_ascii(data_bytes, bytes_per_row)
+                data_bytes = self._decompress_ascii(data, bytes_per_row)
 
+            # ZPL prints 1 bits, PIL shows 1 bits as white
             pil_image = Image.frombytes("1", (width, height), data_bytes)
-            pil_images.append(pil_image)
+            pil_images.append(invert_monochrome(pil_image))
 
         return pil_images
 

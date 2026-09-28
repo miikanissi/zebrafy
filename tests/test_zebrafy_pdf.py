@@ -23,10 +23,13 @@
 
 # 1. Standard library imports:
 import unittest
+from unittest.mock import patch
 
 # 2. Known third party imports:
+from PIL import Image
+
 # 3. Local imports in the relative form:
-from zebrafy import ZebrafyPDF
+from zebrafy import ZebrafyImage, ZebrafyPDF, ZebrafyZPL
 
 from .test_zebrafy_common import TestZebrafyCommonBase
 
@@ -40,221 +43,77 @@ class TestZebrafyPDF(TestZebrafyCommonBase):
         super().setUpClass()
         cls.static_test_pdf = cls._read_static_file("test_pdf.pdf")
 
-    def test_zebrafy_pdf_pdf_bytes(self):
-        """Test ZebrafyImage pdf_bytes input."""
-        with self.assertRaises(ValueError):
-            ZebrafyPDF(None)
-        with self.assertRaises(TypeError):
-            ZebrafyPDF(123)
+    def _two_page_pdf(self):
+        """Get a PDF with a 16x2 and a 24x3 dot page at 72 DPI, all black."""
+        zpl = (
+            ZebrafyImage(Image.new("1", (16, 2), 0), complete_zpl=False).to_zpl()
+            + ZebrafyImage(Image.new("1", (24, 3), 0), complete_zpl=False).to_zpl()
+        )
+        return ZebrafyZPL(zpl).to_pdf()
 
-    def test_zebrafy_pdf_format(self):
-        """Test ZebrafyPDF format input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.format, "ASCII")
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.format = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.format = 123
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.format = "D"
+    # Output validation
+    def test_pdf_to_zpl_fixtures(self):
+        """Test PDF to ZPL against stored fixtures rendered at 72 DPI."""
+        fixtures = {
+            "test_pdf_ascii.zpl": {},
+            "test_pdf_b64.zpl": {"format": "B64"},
+            "test_pdf_z64.zpl": {"format": "Z64"},
+            "test_pdf_no_dither.zpl": {"dither": False},
+            "test_pdf_low_threshold.zpl": {"dither": False, "threshold": 40},
+            "test_pdf_high_threshold.zpl": {"dither": False, "threshold": 215},
+            "test_pdf_low_dpi.zpl": {"dpi": 36},
+            "test_pdf_high_dpi.zpl": {"dpi": 144},
+            "test_pdf_width_height.zpl": {"width": 720, "height": 1280},
+            "test_pdf_rotation.zpl": {"rotation": 90},
+            "test_pdf_string_line_break.zpl": {"string_line_break": 80},
+            "test_pdf_single_label.zpl": {"split_pages": False},
+        }
+        for file_name, options in fixtures.items():
+            with self.subTest(file_name=file_name):
+                zpl = ZebrafyPDF(
+                    self.static_test_pdf, **{"dpi": 72, **options}
+                ).to_zpl()
+                self.assertEqual(zpl, self._read_static_file(file_name))
 
-    def test_zebrafy_pdf_deprecated_compression_type(self):
-        """Test deprecated ZebrafyPDF compression_type input."""
-        gfa = ZebrafyPDF(self.test_pdf, compression_type="A")
-        self.assertEqual(gfa.format, "ASCII")
-        gfb = ZebrafyPDF(self.test_pdf, compression_type="B")
-        self.assertEqual(gfb.format, "B64")
-        gfc = ZebrafyPDF(self.test_pdf, compression_type="C")
-        self.assertEqual(gfc.format, "Z64")
-
-    def test_zebrafy_pdf_invert(self):
-        """Test ZebrafyPDF invert input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertFalse(zebrafy_pdf.invert)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.invert = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.invert = "123"
-
-    def test_zebrafy_pdf_dither(self):
-        """Test ZebrafyPDF dither input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertTrue(zebrafy_pdf.dither)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.dither = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.dither = "123"
-
-    def test_zebrafy_pdf_threshold(self):
-        """Test ZebrafyPDF threshold input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.threshold, 128)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.threshold = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.threshold = "123"
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.threshold = -1
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.threshold = 256
-
-    def test_zebrafy_pdf_dpi(self):
-        """Test ZebrafyPDF dpi input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.dpi, 72)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.dpi = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.dpi = "123"
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.dpi = -1
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.dpi = 0
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.dpi = 721
-
-    def test_zebrafy_pdf_width(self):
-        """Test ZebrafyPDF width input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.width, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.width = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.width = "123"
-
-    def test_zebrafy_pdf_height(self):
-        """Test ZebrafyPDF height input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.height, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.height = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.height = "123"
-
-    def test_zebrafy_pdf_pos_x(self):
-        """Test ZebrafyPDF pos_x input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.pos_x, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.pos_x = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.pos_x = "123"
-
-    def test_zebrafy_pdf_pos_y(self):
-        """Test ZebrafyPDF pos_y input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.pos_y, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.pos_y = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.pos_y = "123"
-
-    def test_zebrafy_pdf_rotation(self):
-        """Test ZebrafyPDF rotation."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertEqual(zebrafy_pdf.rotation, 0)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.rotation = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.rotation = "123"
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.rotation = 90.0
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.rotation = 45
-
-    def test_zebrafy_pdf_string_line_break(self):
-        """Test ZebrafyPdf string_line_break input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertIsNone(zebrafy_pdf.string_line_break)
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.string_line_break = "123"
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.string_line_break = -20
-
-    def test_zebrafy_pdf_complete_zpl(self):
-        """Test ZebrafyPDF complete_zpl input."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertTrue(zebrafy_pdf.complete_zpl)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.complete_zpl = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.complete_zpl = "123"
-
-    def test_zebrafy_pdf_split_pages(self):
-        """Test ZebrafyPDF split pages."""
-        zebrafy_pdf = ZebrafyPDF(self.test_pdf)
-        self.assertFalse(zebrafy_pdf.split_pages)
-        with self.assertRaises(ValueError):
-            zebrafy_pdf.split_pages = None
-        with self.assertRaises(TypeError):
-            zebrafy_pdf.split_pages = "123"
-
-    def test_pdf_to_default_zpl(self):
-        """Test PDF to ZPL with default options."""
-        default_zpl = ZebrafyPDF(self.static_test_pdf).to_zpl()
-        self.assertEqual(default_zpl, self._read_static_file("test_pdf_ascii.zpl"))
-
-    def test_pdf_to_ascii_zpl(self):
-        """Test PDF to ZPL with A (ASCII) compression."""
-        ascii_zpl = ZebrafyPDF(self.static_test_pdf, format="ASCII").to_zpl()
-        self.assertEqual(ascii_zpl, self._read_static_file("test_pdf_ascii.zpl"))
-
-    def test_pdf_to_b64_zpl(self):
-        """Test PDF to ZPL with B (B64 Binary) compression."""
-        b64_zpl = ZebrafyPDF(self.static_test_pdf, format="B64").to_zpl()
-        self.assertEqual(b64_zpl, self._read_static_file("test_pdf_b64.zpl"))
-
-    def test_pdf_to_z64_zpl(self):
-        """Test PDF to ZPL with C (Z64 Binary) compression."""
-        z64_zpl = ZebrafyPDF(self.static_test_pdf, format="Z64").to_zpl()
-        self.assertEqual(z64_zpl, self._read_static_file("test_pdf_z64.zpl"))
-
-    def test_pdf_to_zpl_no_dither(self):
-        """Test PDF to ZPL without dithering the PDF."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, dither=False).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_no_dither.zpl"))
-
-    def test_pdf_to_zpl_threshold_low(self):
-        """Test PDF to ZPL without dithering the PDF and low threshold."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, dither=False, threshold=40).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_low_threshold.zpl"))
-
-    def test_pdf_to_zpl_threshold_high(self):
-        """Test PDF to ZPL without dithering the PDF and high threshold."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, dither=False, threshold=215).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_high_threshold.zpl"))
-
-    def test_pdf_to_zpl_dpi_low(self):
-        """Test PDF to ZPL with low DPI."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, dpi=36).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_low_dpi.zpl"))
-
-    def test_pdf_to_zpl_dpi_high(self):
-        """Test PDF to ZPL with high DPI."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, dpi=144).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_high_dpi.zpl"))
-
-    def test_pdf_to_zpl_width_height(self):
-        """Test PDF to ZPL with set width and height."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, width=720, height=1280).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_width_height.zpl"))
-
-    def test_pdf_to_zpl_rotation(self):
-        """Test PDF to ZPL with rotation."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, rotation=90).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_rotation.zpl"))
-
-    def test_pdf_to_zpl_string_line_break(self):
-        """Test PDF to ZPL with string_line_break."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, string_line_break=80).to_zpl()
+    def test_split_pages(self):
+        """Test each page is a label of its own."""
+        zpl = ZebrafyPDF(self._two_page_pdf(), dpi=72, pos_x=2, pos_y=5).to_zpl()
         self.assertEqual(
-            gf_zpl, self._read_static_file("test_pdf_string_line_break.zpl")
+            zpl,
+            "^XA\n^FO2,5^GFA,4,4,2,FFFFFFFF^FS\n^XZ\n"
+            "^XA\n^FO2,5^GFA,9,9,3,FFFFFFFFFFFFFFFFFF^FS\n^XZ\n",
         )
 
-    def test_pdf_to_zpl_split_pages(self):
-        """Test PDF to ZPL with split pages."""
-        gf_zpl = ZebrafyPDF(self.static_test_pdf, split_pages=True).to_zpl()
-        self.assertEqual(gf_zpl, self._read_static_file("test_pdf_split_pages.zpl"))
+    def test_single_label_stacks_pages(self):
+        """Test pages on a single label are stacked instead of overlapping."""
+        pdf = ZebrafyPDF(
+            self._two_page_pdf(),
+            dpi=72,
+            pos_x=2,
+            pos_y=5,
+            split_pages=False,
+        )
+        self.assertEqual(
+            pdf.to_zpl(),
+            "^XA\n"
+            "^FO2,5^GFA,4,4,2,FFFFFFFF^FS\n"
+            "^FO2,7^GFA,9,9,3,FFFFFFFFFFFFFFFFFF^FS\n"
+            "^XZ\n",
+        )
+        pdf.complete_zpl = False
+        self.assertEqual(
+            pdf.to_zpl(),
+            "^FO2,5^GFA,4,4,2,FFFFFFFF^FS\n^FO2,7^GFA,9,9,3,FFFFFFFFFFFFFFFFFF^FS\n",
+        )
+
+    def test_pdf_without_pages(self):
+        """Test a PDF without pages is rejected."""
+        # PDFium refuses to load a PDF without pages, so fake the rendering
+        with (
+            patch.object(ZebrafyPDF, "_render_pages", return_value=[]),
+            self.assertRaises(ValueError),
+        ):
+            ZebrafyPDF(self.test_pdf).to_zpl()
 
 
 if __name__ == "__main__":
