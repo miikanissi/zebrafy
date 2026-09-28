@@ -75,6 +75,44 @@ class TestZebrafyZPL(TestZebrafyCommonBase):
             image_bytes.getvalue(), self._read_static_file("test_image_z64.png")
         )
 
+    def test_compressed_ascii_zpl_to_image(self):
+        """Test ZPL GFA compressed ASCII to image."""
+        image = ZebrafyZPL(
+            self._read_static_file("test_zpl_ascii_compressed.zpl")
+        ).to_images()[0]
+        self.assertEqual(image.size, (88, 131))
+
+    def test_decompress_ascii(self):
+        """Test ZPL ASCII compression characters."""
+
+        def to_bytes(bytes_total, bytes_per_row, data):
+            zpl = f"^XA^GFA,{bytes_total},{bytes_total},{bytes_per_row},{data}^FS^XZ"
+            return ZebrafyZPL(zpl).to_images()[0].tobytes()
+
+        # Repeat counts, zero fill, one fill and previous row repeat
+        self.assertEqual(
+            to_bytes(8, 2, "HF0,!:G8I0"), bytes.fromhex("FF00FFFFFFFF8000")
+        )
+        # Combined repeat counts: h (40) + G (1) = 41
+        self.assertEqual(to_bytes(25, 25, "hGFI0,"), bytes.fromhex("F" * 41 + "0" * 9))
+        # Largest repeat count z (400)
+        self.assertEqual(to_bytes(200, 200, "zF"), bytes.fromhex("F" * 400))
+        # Repeat count spanning multiple rows
+        self.assertEqual(to_bytes(2, 1, "JA"), bytes.fromhex("AAAA"))
+        # Unterminated last row is filled with zeros
+        self.assertEqual(to_bytes(2, 1, "F,F"), bytes.fromhex("F0F0"))
+        # Lowercase hexadecimal is not a repeat count
+        self.assertEqual(to_bytes(2, 2, "ab,"), bytes.fromhex("AB00"))
+        # Whitespace is ignored
+        self.assertEqual(to_bytes(2, 2, "F F,"), bytes.fromhex("FF00"))
+
+        with self.assertRaises(ValueError):
+            to_bytes(2, 1, ":FF")
+        with self.assertRaises(ValueError):
+            to_bytes(2, 1, "F:F")
+        with self.assertRaises(ValueError):
+            to_bytes(2, 1, "FFZ,")
+
     def test_broken_zpl_gf_to_image(self):
         """Test broken ZPL to image bytes - resulting in ValueError."""
         zebrafy_broken_zpl = ZebrafyZPL(

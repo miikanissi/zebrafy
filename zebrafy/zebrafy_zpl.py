@@ -39,6 +39,7 @@ from zebrafy.crc import CRC
 GF_MATCHER = re.compile(
     r"\^GF([ABC]*),([1-9][0-9]*),([1-9][0-9]*),([1-9][0-9]*),(.*?(?=\^FS))\^FS"
 )
+HEX_MATCHER = re.compile(r"[0-9A-Fa-f\s]*")
 
 if sys.version_info >= (3, 9):
     DimensionsType = tuple[int, int]
@@ -83,6 +84,62 @@ class ZebrafyZPL:
         """
         return int(width * 8), int(total / width)
 
+    def _decompress_ascii(self, data: str, bytes_per_row: int) -> bytes:
+        """
+        Decompress ZPL ASCII hexadecimal graphic field data.
+
+        ZPL compresses ASCII hexadecimal data with the following characters:
+
+            - ``G`` to ``Y``: Repeat the following hexadecimal character 1 to 19 \
+            times
+            - ``g`` to ``z``: Repeat the following hexadecimal character 20 to 400 \
+            times, in steps of 20. Counts can be combined, e.g. ``hG`` is 41.
+            - ``,``: Fill the rest of the row with zeros
+            - ``!``: Fill the rest of the row with ones
+            - ``:``: Repeat the previous row
+
+        :param data: ZPL ASCII hexadecimal graphic field data, compressed or not.
+        :param bytes_per_row: Total number of bytes comprising one row of the data.
+        :returns: Decompressed graphic field data bytes.
+        """
+        if HEX_MATCHER.fullmatch(data):
+            return bytes.fromhex(data)
+
+        row_length = bytes_per_row * 2
+        rows = []
+        row = ""
+        repeat = 0
+        for char in data:
+            if char.isspace():
+                continue
+            if "G" <= char <= "Y":
+                repeat += ord(char) - ord("F")
+            elif "g" <= char <= "z":
+                repeat += (ord(char) - ord("f")) * 20
+            elif char in ",!":
+                rows.append(row.ljust(row_length, "0" if char == "," else "F"))
+                row = ""
+            elif char == ":":
+                if row or not rows:
+                    raise ValueError(
+                        "Invalid row repeat in ZPL graphic field (^GF) data."
+                    )
+                rows.append(rows[-1])
+            elif char in "0123456789ABCDEFabcdef":
+                row += char * max(repeat, 1)
+                repeat = 0
+                while len(row) >= row_length:
+                    rows.append(row[:row_length])
+                    row = row[row_length:]
+            else:
+                raise ValueError(
+                    f"Invalid character {char!r} in ZPL graphic field (^GF) data."
+                )
+        if row:
+            rows.append(row.ljust(row_length, "0"))
+
+        return bytes.fromhex("".join(rows))
+
     def to_images(self) -> ToImagesType:
         """
         Convert Zebra Programming Language (ZPL) graphic fields to PIL Image objects.
@@ -95,7 +152,8 @@ class ZebrafyZPL:
 
         pil_images = []
         for match in matches:
-            width, height = self._match_dimensions(int(match[2]), int(match[3]))
+            bytes_per_row = int(match[3])
+            width, height = self._match_dimensions(int(match[2]), bytes_per_row)
             compression_type = match[0].upper()
             data_bytes = match[4]
 
@@ -121,7 +179,7 @@ class ZebrafyZPL:
                     data_bytes = zlib.decompress(data_bytes)
 
             else:
-                data_bytes = bytes.fromhex(data_bytes)
+                data_bytes = self._decompress_ascii(data_bytes, bytes_per_row)
 
             pil_image = Image.frombytes("1", (width, height), data_bytes)
             pil_images.append(pil_image)
