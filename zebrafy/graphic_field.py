@@ -132,7 +132,9 @@ class GraphicField:
 
         :returns: Binary byte count
         """
-        return len(self._get_data_string())
+        if self._format == "ASCII":
+            return self._get_graphic_field_count()
+        return len(self._get_encoded_data_string())
 
     def _get_bytes_per_row(self) -> int:
         """
@@ -155,9 +157,9 @@ class GraphicField:
         """
         return int(self._get_bytes_per_row() * self._pil_image.size[1])
 
-    def _get_data_string(self) -> str:
+    def _get_encoded_data_string(self) -> str:
         """
-        Get graphic field data string depending on format.
+        Get graphic field data string depending on format, without line breaks.
 
         :returns: Graphic field data string depending on format.
         """
@@ -185,6 +187,16 @@ class GraphicField:
                 crc=CRC(z64_bytes).get_crc_hex_string(),
             )
 
+        return data_string
+
+    def _get_data_string(self) -> str:
+        """
+        Get graphic field data string depending on format.
+
+        :returns: Graphic field data string depending on format, split into lines \
+        if ``string_line_break`` is set.
+        """
+        data_string = self._get_encoded_data_string()
         if self._string_line_break:
             data_string = "\n".join(
                 data_string[i : i + self._string_line_break]

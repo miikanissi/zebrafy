@@ -92,6 +92,26 @@ class TestZebrafyGraphicField(TestZebrafyCommonBase):
         data_string = gf._get_data_string()
         self.assertTrue(data_string.startswith(":Z64:"))
 
+    def test_get_binary_byte_count(self):
+        """Test _get_binary_byte_count method."""
+        image = Image.new("1", (16, 4))
+
+        # ASCII binary byte count must match graphic field count
+        gf = GraphicField(image, format="ASCII")
+        self.assertEqual(gf._get_binary_byte_count(), gf._get_graphic_field_count())
+        self.assertEqual(gf._get_binary_byte_count(), 8)
+
+        # Line breaks are not counted
+        gf = GraphicField(image, format="ASCII", string_line_break=3)
+        self.assertEqual(gf._get_binary_byte_count(), 8)
+        for format in ["B64", "Z64"]:
+            gf = GraphicField(image, format=format)
+            count = len(gf._get_data_string())
+            self.assertEqual(gf._get_binary_byte_count(), count)
+            gf.string_line_break = 3
+            self.assertIn("\n", gf._get_data_string())
+            self.assertEqual(gf._get_binary_byte_count(), count)
+
     def test_edge_cases(self):
         """Test edge cases with different image sizes and color modes."""
         small_image = Image.new("1", (1, 1))
