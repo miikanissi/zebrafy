@@ -2,7 +2,7 @@ name: Upload Zebrafy to PyPI Upon a Release
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   pypi-publish:
