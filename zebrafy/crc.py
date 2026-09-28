@@ -31,19 +31,22 @@ import operator
 
 class CRC:
     """
-    Utility class to calculate CRC-16-CCITT algorithm across the received data bytes.
+    Utility class to calculate CRC-16/XMODEM algorithm across the received data bytes.
 
-    CRC-16-CCITT polynomial representation: x^{16} + x^{12} + x^5 + 1
+    Zebra printers validate B64 and Z64 graphic field data with CRC-16/XMODEM \
+    (polynomial ``0x1021``, initial value ``0x0000``, no reflection, no final XOR).
+
+    CRC-16 polynomial representation: x^{16} + x^{12} + x^5 + 1
 
     :param data_bytes: Bytes object for which to calculate CRC
-    :param poly: Reversed polynomial representation for CRC-16-CCITT calculation, \
-    defaults to ``0x8408``
+    :param poly: Polynomial representation for CRC-16/XMODEM calculation, \
+    defaults to ``0x1021``
     """
 
     def __init__(self, data_bytes: bytes, poly: int = None):
         self.data_bytes = data_bytes
         if poly is None:
-            poly = 0x8408
+            poly = 0x1021
         self.poly = poly
 
     data_bytes = property(operator.attrgetter("_data_bytes"))
@@ -68,31 +71,28 @@ class CRC:
             raise TypeError(f"Polynomial must be a valid integer. {type(p)} was given.")
         self._poly = p
 
-    def _get_crc16_ccitt(self) -> int:
+    def _get_crc16_xmodem(self) -> int:
         """
-        Calculate CRC-16-CCITT Algorithm.
+        Calculate CRC-16/XMODEM Algorithm.
 
-        :returns: CRC-16-CCITT
+        :returns: CRC-16/XMODEM
         """
-        data = bytearray(self._data_bytes)
-        crc = 0xFFFF
-        for b in data:
-            cur_byte = 0xFF & b
+        crc = 0x0000
+        for b in self._data_bytes:
+            crc ^= b << 8
             for _ in range(0, 8):
-                if (crc & 0x0001) ^ (cur_byte & 0x0001):
-                    crc = (crc >> 1) ^ self._poly
+                if crc & 0x8000:
+                    crc = (crc << 1) ^ self._poly
                 else:
-                    crc >>= 1
-                cur_byte >>= 1
-        crc = ~crc & 0xFFFF
-        crc = (crc << 8) | ((crc >> 8) & 0xFF)
+                    crc <<= 1
+                crc &= 0xFFFF
 
-        return crc & 0xFFFF
+        return crc
 
     def get_crc_hex_string(self) -> str:
         """
-        Get CRC-16-CCITT as four digit zero padding hexadecimal string.
+        Get CRC-16/XMODEM as four digit zero padding hexadecimal string.
 
-        :returns: CRC-16-CCITT as four digit zero padding hexadecimal string
+        :returns: CRC-16/XMODEM as four digit zero padding hexadecimal string
         """
-        return f"{self._get_crc16_ccitt():04X}"
+        return f"{self._get_crc16_xmodem():04X}"

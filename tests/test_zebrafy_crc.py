@@ -48,11 +48,18 @@ class TestZebrafyCRC(TestZebrafyCommonBase):
 
     def test_crc_poly(self):
         """Test CRC polynomial input."""
-        self.assertEqual(self.crc.poly, 0x8408)
+        self.assertEqual(self.crc.poly, 0x1021)
         with self.assertRaises(ValueError):
             self.crc.poly = None
         with self.assertRaises(TypeError):
             self.crc.poly = "Test"
+
+    def test_crc_hex_string(self):
+        """Test CRC-16/XMODEM hex string output."""
+        # Standard CRC-16/XMODEM check value
+        self.assertEqual(CRC(b"123456789").get_crc_hex_string(), "31C3")
+        self.assertEqual(self.crc.get_crc_hex_string(), "A641")
+        self.assertEqual(CRC(b"").get_crc_hex_string(), "0000")
 
 
 if __name__ == "__main__":
