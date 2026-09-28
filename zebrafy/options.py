@@ -25,6 +25,8 @@
 
 # 1. Standard library imports:
 import dataclasses
+from enum import IntEnum
+from typing import Any
 
 # 2. Known third party imports:
 from PIL import Image
@@ -49,6 +51,24 @@ _CLOCKWISE_TRANSPOSE = {
 }
 
 
+class PrinterDPI(IntEnum):
+    """
+    Print head resolutions of Zebra printers, in dots per inch.
+
+    Pass one to ``dpi`` so that a PDF prints at its physical size.
+    """
+
+    DPI_152 = 152  #: 6 dots per millimetre
+    DPI_203 = 203  #: 8 dots per millimetre, the most common resolution
+    DPI_300 = 300  #: 12 dots per millimetre
+    DPI_600 = 600  #: 24 dots per millimetre
+
+
+def dpi_field() -> Any:
+    """Return a validated ``dpi`` dataclass field, defaulting to 203 DPI."""
+    return validated_field(int(PrinterDPI.DPI_203), "DPI", int, minimum=1, maximum=720)
+
+
 @dataclasses.dataclass(kw_only=True)
 class GraphicOptions(Validated):
     """
@@ -57,6 +77,8 @@ class GraphicOptions(Validated):
     :param format: ZPL graphic field format, defaults to ``"ASCII"``:
 
         - ``"ASCII"``: ASCII hexadecimal - most compatible (default)
+        - ``"ASCII_COMPRESSED"``: ASCII hexadecimal with ZPL run-length \
+        compression - much smaller and just as compatible
         - ``"B64"``: Base64 binary
         - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
     :param invert: Invert the black and white in the resulting image, defaults to \
@@ -77,6 +99,8 @@ class GraphicOptions(Validated):
     which a new line is added, defaults to ``None``
     :param complete_zpl: Return a complete ZPL label with ``^XA`` and ``^XZ``. \
     Otherwise return only the graphic field, defaults to ``True``
+    :param set_label_size: Set the print width (``^PW``) and label length (``^LL``) \
+    to fit the image. Only applies if ``complete_zpl`` is set, defaults to ``False``
     """
 
     format: str = format_field()
@@ -90,6 +114,7 @@ class GraphicOptions(Validated):
     rotation: int = validated_field(0, "Rotation", int, choices=ROTATIONS)
     string_line_break: int | None = string_line_break_field()
     complete_zpl: bool = validated_field(True, "Complete ZPL", bool)
+    set_label_size: bool = validated_field(False, "Set label size", bool)
 
     def _to_monochrome(
         self, pil_image: Image.Image, rotate: bool = True
@@ -143,11 +168,16 @@ class GraphicOptions(Validated):
         )
         return f"^FO{pos_x},{pos_y}" + graphic_field.get_graphic_field()
 
-    def _get_label(self, body: str) -> str:
+    def _get_label(self, body: str, width: int, height: int) -> str:
         """
         Wrap ZPL commands into a complete label.
 
         :param body: ZPL commands, each line ending in a line break.
+        :param width: Width of the label content in dots, excluding ``pos_x``.
+        :param height: Height of the label content in dots, excluding ``pos_y``.
         :returns: A complete ZPL label.
         """
-        return "^XA\n" + body + "^XZ\n"
+        header = "^XA\n"
+        if self.set_label_size:
+            header += f"^PW{self.pos_x + width}\n^LL{self.pos_y + height}\n"
+        return header + body + "^XZ\n"

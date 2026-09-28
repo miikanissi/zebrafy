@@ -72,5 +72,5 @@ class ZebrafyImage(GraphicOptions):
         graphic_field = self._get_field(pil_image, self.pos_x, self.pos_y)
 
         if self.complete_zpl:
-            return self._get_label(graphic_field + "\n")
+            return self._get_label(graphic_field + "\n", *pil_image.size)
         return graphic_field

@@ -28,6 +28,7 @@ extend-immutable-calls = [
     "zebrafy._validation.validated_field",
     "zebrafy.graphic_field.format_field",
     "zebrafy.graphic_field.string_line_break_field",
+    "zebrafy.options.dpi_field",
 ]
 
 [lint.mccabe]

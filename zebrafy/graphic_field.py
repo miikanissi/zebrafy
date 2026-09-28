@@ -24,6 +24,7 @@
 # 1. Standard library imports:
 import base64
 import dataclasses
+import itertools
 import zlib
 from typing import Any
 
@@ -34,7 +35,10 @@ from PIL import Image
 from zebrafy._validation import Validated, validated_field
 from zebrafy.crc import CRC
 
-FORMATS = ("ASCII", "B64", "Z64")
+FORMATS = ("ASCII", "ASCII_COMPRESSED", "B64", "Z64")
+
+# Longest run a single ZPL repeat count can express: "z" (400) + "Y" (19)
+_MAX_RUN = 419
 
 
 def format_field() -> Any:
@@ -59,6 +63,64 @@ def invert_monochrome(pil_image: Image.Image) -> Image.Image:
     return pil_image.point(lambda v: 0 if v else 255)
 
 
+def _encode_run(char: str, count: int) -> str:
+    """
+    Encode a run of one hexadecimal character with ZPL repeat counts.
+
+    :param char: Hexadecimal character.
+    :param count: Number of times the character repeats.
+    :returns: Run-length encoded string.
+    """
+    encoded = ""
+    while count > 0:
+        run = min(count, _MAX_RUN)
+        count -= run
+        if run < 3:
+            encoded += char * run
+            continue
+        tens, units = divmod(run, 20)
+        if tens:
+            encoded += chr(ord("f") + tens)
+        if units:
+            encoded += chr(ord("F") + units)
+        encoded += char
+    return encoded
+
+
+def compress_ascii(data: str, bytes_per_row: int) -> str:
+    """
+    Compress ASCII hexadecimal graphic field data with the ZPL compression scheme.
+
+    Each row is run-length encoded, a row ending in zeros or ones is closed with \
+    ``,`` or ``!``, and a row identical to the previous one is replaced by ``:``.
+
+    :param data: Uppercase ASCII hexadecimal graphic field data.
+    :param bytes_per_row: Number of bytes in one row of the image.
+    :returns: Compressed graphic field data.
+    """
+    row_length = bytes_per_row * 2
+    rows = []
+    previous = None
+    for start in range(0, len(data), row_length):
+        row = data[start : start + row_length]
+        if row == previous:
+            rows.append(":")
+            continue
+        previous = row
+
+        body, fill = row, ""
+        if row.endswith("0"):
+            body, fill = row.rstrip("0"), ","
+        elif row.endswith("F"):
+            body, fill = row.rstrip("F"), "!"
+
+        rows.append(
+            "".join(_encode_run(c, len(list(g))) for c, g in itertools.groupby(body))
+            + fill
+        )
+    return "".join(rows)
+
+
 @dataclasses.dataclass
 class GraphicField(Validated):
     """
@@ -72,6 +134,8 @@ class GraphicField(Validated):
     defaults to ``"ASCII"``:
 
         - ``"ASCII"``: ASCII hexadecimal - most compatible (default)
+        - ``"ASCII_COMPRESSED"``: ASCII hexadecimal with ZPL run-length \
+        compression - much smaller and just as compatible
         - ``"B64"``: Base64 binary
         - ``"Z64"``: LZ77 / Zlib compressed base64 binary - best compression
     :param string_line_break: Number of characters in graphic field content after \
@@ -113,7 +177,7 @@ class GraphicField(Validated):
 
         :returns: Binary byte count
         """
-        if self.format == "ASCII":
+        if self.format in ("ASCII", "ASCII_COMPRESSED"):
             return self._get_graphic_field_count()
         return len(self._get_encoded_data_string())
 
@@ -148,6 +212,9 @@ class GraphicField(Validated):
 
         if self.format == "ASCII":
             return image_bytes.hex().upper()
+
+        if self.format == "ASCII_COMPRESSED":
+            return compress_ascii(image_bytes.hex().upper(), self._get_bytes_per_row())
 
         # Format B64 and Z64: Convert (LZ77 / Zlib compressed) bytes to base64 and
         # add header + CRC

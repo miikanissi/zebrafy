@@ -64,8 +64,14 @@ Documentation = "https://zebrafy.readthedocs.io/"
 Source = "https://github.com/miikanissi/zebrafy"
 Issues = "https://github.com/miikanissi/zebrafy/issues"
 
+[project.scripts]
+zebrafy = "zebrafy.cli:main"
+
 [tool.setuptools]
 include-package-data = false
+
+[tool.setuptools.package-data]
+zebrafy = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = [ "zebrafy"]
