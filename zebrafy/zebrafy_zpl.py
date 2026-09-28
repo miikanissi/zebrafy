@@ -145,7 +145,7 @@ class ZebrafyZPL:
             # Load image bytes into PDF Image using pypdfium2 and get size
             image = PdfImage.new(pdf)
             image.load_jpeg(image_bytes)
-            width, height = image.get_size()
+            width, height = image.get_px_size()
             matrix = PdfMatrix().scale(width, height)
             image.set_matrix(matrix)
 
