@@ -28,6 +28,14 @@ zebrafy.zebrafy\_zpl module
    :undoc-members:
    :show-inheritance:
 
+zebrafy.options module
+----------------------
+
+.. automodule:: zebrafy.options
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 zebrafy.crc module
 ------------------
 
