@@ -27,7 +27,6 @@ import os
 import sys
 import unittest
 from importlib.metadata import version
-from typing import Union
 from unittest.mock import patch
 
 # 2. Known third party imports:
@@ -44,9 +43,7 @@ class TestZebrafyCommonBase(unittest.TestCase):
         """Set up class."""
         super().setUpClass()
         cls.test_image = Image.new(mode="RGB", size=(200, 200))
-        cls.test_zpl = (
-            "^XA\n" "^FO50,50\n" "^GFA,16,16,1,,\n" "FFFFFFFFFFFFFFFF\n" "^XZ"
-        )
+        cls.test_zpl = "^XA\n^FO50,50\n^GFA,16,16,1,,\nFFFFFFFFFFFFFFFF\n^XZ"
         cls.test_pdf = (
             b"%PDF-1.4\n"
             b"1 0 obj\n"
@@ -79,7 +76,7 @@ class TestZebrafyCommonBase(unittest.TestCase):
         )
 
     @classmethod
-    def _read_static_file(cls, file_name: str) -> Union[bytes, str]:
+    def _read_static_file(cls, file_name: str) -> bytes | str:
         """
         Read a test file from static directory.
 

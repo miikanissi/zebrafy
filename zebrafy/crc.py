@@ -43,7 +43,7 @@ class CRC:
     defaults to ``0x1021``
     """
 
-    def __init__(self, data_bytes: bytes, poly: int = None):
+    def __init__(self, data_bytes: bytes, poly: int | None = None):
         self.data_bytes = data_bytes
         if poly is None:
             poly = 0x1021
@@ -80,7 +80,7 @@ class CRC:
         crc = 0x0000
         for b in self._data_bytes:
             crc ^= b << 8
-            for _ in range(0, 8):
+            for _ in range(8):
                 if crc & 0x8000:
                     crc = (crc << 1) ^ self._poly
                 else:

@@ -24,7 +24,6 @@
 # 1. Standard library imports:
 import operator
 from io import BytesIO
-from typing import Union
 
 # 2. Known third party imports:
 from PIL import Image
@@ -75,19 +74,19 @@ class ZebrafyImage:
 
     def __init__(
         self,
-        image: Union[bytes, Image.Image],
-        compression_type: str = None,
-        format: str = None,
-        invert: bool = None,
-        dither: bool = None,
-        threshold: int = None,
-        width: int = None,
-        height: int = None,
-        pos_x: int = None,
-        pos_y: int = None,
-        rotation: int = None,
-        string_line_break: int = None,
-        complete_zpl: bool = None,
+        image: bytes | Image.Image,
+        compression_type: str | None = None,
+        format: str | None = None,
+        invert: bool | None = None,
+        dither: bool | None = None,
+        threshold: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        pos_x: int | None = None,
+        pos_y: int | None = None,
+        rotation: int | None = None,
+        string_line_break: int | None = None,
+        complete_zpl: bool | None = None,
     ):
         self.image = image
         if format is None:

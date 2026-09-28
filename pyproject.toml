@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel"]
+requires = ["setuptools>=77", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,22 +8,25 @@ dynamic = ["version"]
 description = "Python library for converting PDF and images to Zebra Programming Language (ZPL)"
 classifiers = [
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Operating System :: OS Independent",
     "Natural Language :: English",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Intended Audience :: Manufacturing",
     "Topic :: Printing",
 ]
 dependencies = ["pillow", "pypdfium2>=5.0.0"]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+license = "LGPL-3.0-or-later"
+license-files = ["LICENSE.txt"]
 
 [project.optional-dependencies]
 docs = [
@@ -32,16 +35,15 @@ docs = [
     "sphinx_rtd_theme>=2.0.0",
 ]
 test = [
-    "pytest-cov",
+    "pytest>=8",
+    "pytest-cov>=5",
 ]
 lint = [
     "pre-commit",
 ]
 build = [
-    "setuptools>=64",
-    "setuptools_scm>=8",
-    "wheel",
     "build",
+    "twine",
 ]
 
 [[project.authors]]
@@ -52,9 +54,6 @@ email = "miika@miikanissi.com"
 name = "Miika Nissi"
 email = "miika@miikanissi.com"
 
-[project.license]
-text = "LGPLv3"
-
 [project.readme]
 file = "README.rst"
 content-type = "text/x-rst"
@@ -62,6 +61,8 @@ content-type = "text/x-rst"
 [project.urls]
 Homepage = "https://github.com/miikanissi/zebrafy/"
 Documentation = "https://zebrafy.readthedocs.io/"
+Source = "https://github.com/miikanissi/zebrafy"
+Issues = "https://github.com/miikanissi/zebrafy/issues"
 
 [tool.setuptools]
 include-package-data = false
